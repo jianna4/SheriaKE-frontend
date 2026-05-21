@@ -74,31 +74,57 @@ const SignupPage = () => {
         navigate('/login');
       }, 2000);
       
-    } catch (err) {
-      console.error('Signup error:', err);
-      
-      if (err.response?.data) {
-        const errors = err.response.data;
-        const errorMessages = [];
-        
-        if (typeof errors === 'object') {
-          for (const key in errors) {
-            if (Array.isArray(errors[key])) {
-              errorMessages.push(`${key}: ${errors[key].join(', ')}`);
-            } else if (typeof errors[key] === 'string') {
-              errorMessages.push(errors[key]);
-            } else {
-              errorMessages.push(`${key}: ${JSON.stringify(errors[key])}`);
+    } // In your signup.jsx, update the error handling section
+catch (err) {
+  console.error('🔴 SIGNUP ERROR FULL OBJECT:', err);
+  console.error('🔴 SIGNUP ERROR RESPONSE:', err.response);
+  console.error('🔴 SIGNUP ERROR DATA:', err.response?.data);
+  console.error('🔴 SIGNUP ERROR STATUS:', err.response?.status);
+  
+  // Try to get the actual error message from Django
+  if (err.response?.data) {
+    const errorData = err.response.data;
+    
+    // Django REST Framework often returns errors in this format
+    if (typeof errorData === 'object') {
+      // Check for field-specific errors
+      const fieldErrors = [];
+      for (const [field, messages] of Object.entries(errorData)) {
+        if (Array.isArray(messages)) {
+          fieldErrors.push(`${field}: ${messages.join(', ')}`);
+        } else if (typeof messages === 'string') {
+          fieldErrors.push(`${field}: ${messages}`);
+        } else if (messages && typeof messages === 'object') {
+          // Handle nested errors
+          for (const [subField, subMessages] of Object.entries(messages)) {
+            if (Array.isArray(subMessages)) {
+              fieldErrors.push(`${field}.${subField}: ${subMessages.join(', ')}`);
             }
           }
-          setError(errorMessages.join(' | '));
-        } else {
-          setError(errors);
         }
-      } else {
-        setError('Signup failed. Please check your information and try again.');
       }
-    } finally {
+      
+      if (fieldErrors.length > 0) {
+        setError(fieldErrors.join(' | '));
+      } else if (errorData.detail) {
+        setError(errorData.detail);
+      } else if (errorData.non_field_errors) {
+        setError(errorData.non_field_errors.join(', '));
+      } else {
+        // If we can't parse, show the raw error
+        setError(JSON.stringify(errorData, null, 2));
+      }
+    } else if (typeof errorData === 'string') {
+      setError(errorData);
+    } else {
+      setError('Registration failed. Please check your information.');
+    }
+  } else if (err.message) {
+    setError(`Network error: ${err.message}`);
+  } else {
+    setError('Unable to connect to server. Please check if backend is running.');
+  }
+} finally {
       setLoading(false);
     }
   };

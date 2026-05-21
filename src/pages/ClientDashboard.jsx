@@ -67,11 +67,11 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-navy-900 to-navy-800 rounded-2xl p-8 mb-8 text-white">
+        <div className="bg-gradient-to-r from-navy-900 to-navy-800 rounded-2xl p-8 mb-8 text-black">
           <h1 className="text-3xl font-bold mb-2">
             Welcome back, {user?.first_name || user?.username}!
           </h1>
-          <p className="text-gray-300">
+          <p className="text-gray-900">
             Find the right lawyer for your legal needs and track your cases.
           </p>
           <Link

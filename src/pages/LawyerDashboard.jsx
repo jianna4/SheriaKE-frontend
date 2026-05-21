@@ -82,10 +82,10 @@ const LawyerDashboard = () => {
         <div className="bg-gradient-to-r from-navy-900 to-navy-800 rounded-2xl p-8 mb-8 text-white">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-3xl font-bold mb-2">
+              <h1 className="text-3xl font-bold mb-2 text-black">
                 Welcome back, {user?.first_name || user?.username}!
               </h1>
-              <p className="text-gray-300">
+              <p className="text-gray-900">
                 Find cases that match your expertise and grow your practice.
               </p>
             </div>

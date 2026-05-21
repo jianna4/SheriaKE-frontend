@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Scale, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from "../Components/contexts/AuthContext";
@@ -10,7 +10,41 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
+  
+
+  // Get the redirect path from location state or default based on role
+  const from = location.state?.from?.pathname;
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      redirectBasedOnRole(user.role);
+    }
+  }, [isAuthenticated, user]);
+
+  const redirectBasedOnRole = (role) => {
+    // If there's a specific redirect path from location state, use that first
+    if (from) {
+      navigate(from, { replace: true });
+      return;
+    }
+    
+    // Otherwise redirect based on role
+    switch (role) {
+      case 'client':
+        navigate('/client/dashboard', { replace: true });
+        break;
+      case 'lawyer':
+        navigate('/lawyer/dashboard', { replace: true });
+        break;
+      case 'admin':
+        navigate('/admin/dashboard', { replace: true });
+        break;
+      default:
+        navigate('/dashboard', { replace: true });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,10 +59,6 @@ const LoginPage = () => {
 
     try {
       await login(email, password);
-      
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 100);
       
     } catch (err) {
       console.error('Login error:', err);
