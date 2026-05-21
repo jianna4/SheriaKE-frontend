@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Scale, Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle } from 'lucide-react';
+import { Scale, Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle, Briefcase, Users } from 'lucide-react';
 
+import { useAuth } from "../Components/contexts/AuthContext";
 const SignupPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    first_name: '',
+    last_name: '',
     phone_number: '',
+    role: 'client', // Default role, stored in state
     password: '',
     password_confirm: '',
   });
@@ -15,12 +19,22 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
+  const { register } = useAuth();
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleRoleSelect = (role) => {
+    setFormData({
+      ...formData,
+      role: role
+    });
+    // Also store in localStorage if you want to persist it
+    localStorage.setItem('preferred_role', role);
   };
 
   const handleSubmit = async (e) => {
@@ -41,35 +55,57 @@ const SignupPage = () => {
       return;
     }
 
+    // Prepare data for API with the selected role from state
+    const apiData = {
+      username: formData.username,
+      email: formData.email,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone_number: formData.phone_number,
+      password: formData.password,
+      password_confirm: formData.password_confirm,
+      role: formData.role, // Using role from state
+    };
+
     try {
-      // TODO: Connect to your actual signup API
-      // This is a demo - replace with your API call
+      const response = await register(apiData);
       
-      // Simulate API call
+      // Clear stored role if you want
+      localStorage.removeItem('preferred_role');
+      
+      setSuccess(true);
+      
+      // Redirect to login after 2 seconds
       setTimeout(() => {
-        // Store user data in localStorage for demo
-        const userData = {
-          username: formData.username,
-          email: formData.email,
-          phone_number: formData.phone_number,
-          // Role will be set in profile later
-          role: null,
-          is_verified: false
-        };
-        localStorage.setItem('temp_user', JSON.stringify(userData));
-        
-        setSuccess(true);
-        
-        // Redirect to role selection after 2 seconds
-        setTimeout(() => {
-          navigate('/select-role');
-        }, 2000);
-        
-        setLoading(false);
-      }, 1000);
+        navigate('/login');
+      }, 2000);
       
     } catch (err) {
-      setError('Signup failed. Please try again.');
+      console.error('Signup error:', err);
+      
+      // Format error messages from Django
+      if (err.response?.data) {
+        const errors = err.response.data;
+        const errorMessages = [];
+        
+        if (typeof errors === 'object') {
+          for (const key in errors) {
+            if (Array.isArray(errors[key])) {
+              errorMessages.push(`${key}: ${errors[key].join(', ')}`);
+            } else if (typeof errors[key] === 'string') {
+              errorMessages.push(errors[key]);
+            } else {
+              errorMessages.push(`${key}: ${JSON.stringify(errors[key])}`);
+            }
+          }
+          setError(errorMessages.join(' | '));
+        } else {
+          setError(errors);
+        }
+      } else {
+        setError('Signup failed. Please check your information and try again.');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -81,12 +117,14 @@ const SignupPage = () => {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-navy-900 mb-2">Account Created!</h2>
+          <h2 className="text-2xl font-bold text-navy-900 mb-2">
+            {formData.role === 'lawyer' ? 'Lawyer Account Created!' : 'Account Created!'}
+          </h2>
           <p className="text-gray-600 mb-4">
-            Your account has been created successfully.
+            Your {formData.role} account has been created successfully.
           </p>
           <p className="text-sm text-gray-500">
-            Redirecting you to choose your role...
+            Redirecting you to login...
           </p>
         </div>
       </div>
@@ -122,6 +160,77 @@ const SignupPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Role Selection - Added here */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                I want to sign up as
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelect('client')}
+                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all ${
+                    formData.role === 'client'
+                      ? 'border-gold-500 bg-gold-50 text-gold-700 ring-2 ring-gold-500'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Users className="w-5 h-5 mx-auto mb-1" />
+                  Client
+                  <span className="block text-xs font-normal text-gray-500 mt-1">
+                    Get legal help
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRoleSelect('lawyer')}
+                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all ${
+                    formData.role === 'lawyer'
+                      ? 'border-gold-500 bg-gold-50 text-gold-700 ring-2 ring-gold-500'
+                      : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Briefcase className="w-5 h-5 mx-auto mb-1" />
+                  Lawyer
+                  <span className="block text-xs font-normal text-gray-500 mt-1">
+                    Offer legal services
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* First Name & Last Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  placeholder="John"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  placeholder="Doe"
+                  required
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Username
@@ -160,7 +269,7 @@ const SignupPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Phone Number {formData.role === 'lawyer' && <span className="text-red-500 text-xs">*</span>}
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -171,9 +280,14 @@ const SignupPage = () => {
                   onChange={handleChange}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
                   placeholder="+254 712 345 678"
-                  required
+                  required={formData.role === 'lawyer'}
                 />
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.role === 'lawyer' 
+                  ? 'Phone number is required for lawyers for verification' 
+                  : 'Optional for clients'}
+              </p>
             </div>
 
             <div>
@@ -203,6 +317,9 @@ const SignupPage = () => {
                   )}
                 </button>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Must be at least 6 characters
+              </p>
             </div>
 
             <div>
@@ -228,7 +345,7 @@ const SignupPage = () => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-navy-600 to-navy-800 text-white py-3 rounded-lg font-semibold hover:from-navy-700 hover:to-navy-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Creating account...' : `Sign up as ${formData.role === 'lawyer' ? 'Lawyer' : 'Client'}`}
               {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>

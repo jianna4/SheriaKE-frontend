@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Scale, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
-
+import { useAuth } from "../Components/contexts/AuthContext";
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -9,40 +9,38 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth(); // Use the real auth context
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
+    
     // Simple validation
     if (!email || !password) {
       setError('Please fill in all fields');
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setError('');
+
     try {
-      // TODO: Connect to your actual login API
-      // For now, demo login - redirect based on role
-      // You'll replace this with your actual API call
+      // Use the real login function from AuthContext
+      // It expects username but we can use email as username (your backend supports both)
+      await login(email, password);
       
-      // Simulate API call
+      // After successful login, the AuthContext will have the user data
+      // Navigate based on role - we'll get user from context after login
+      // For now, let's wait a tiny bit for the context to update
       setTimeout(() => {
-        // Check if email contains 'lawyer' to determine role
-        // This is just for demo - remove this logic
-        const isLawyer = email.includes('lawyer');
-        
-        if (isLawyer) {
-          navigate('/lawyer/dashboard');
-        } else {
-          navigate('/client/dashboard');
-        }
-        setLoading(false);
-      }, 1000);
+        // The redirect will happen automatically based on role
+        // We'll let the ProtectedRoute handle it, but we can also do manual redirect
+        navigate('/dashboard');
+      }, 100);
       
     } catch (err) {
-      setError('Invalid email or password');
+      console.error('Login error:', err);
+      setError(err.response?.data?.detail || 'Invalid email or password. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -78,16 +76,16 @@ const LoginPage = () => {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                Email Address or Username
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
-                  placeholder="you@example.com"
+                  placeholder="you@example.com or username"
                   required
                 />
               </div>
