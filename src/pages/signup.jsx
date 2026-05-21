@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Scale, Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle, Briefcase, Users } from 'lucide-react';
 
 import { useAuth } from "../Components/contexts/AuthContext";
+
 const SignupPage = () => {
   const [formData, setFormData] = useState({
     username: '',
@@ -10,7 +11,7 @@ const SignupPage = () => {
     first_name: '',
     last_name: '',
     phone_number: '',
-    role: 'client', // Default role, stored in state
+    role: 'client',
     password: '',
     password_confirm: '',
   });
@@ -33,7 +34,6 @@ const SignupPage = () => {
       ...formData,
       role: role
     });
-    // Also store in localStorage if you want to persist it
     localStorage.setItem('preferred_role', role);
   };
 
@@ -42,7 +42,6 @@ const SignupPage = () => {
     setLoading(true);
     setError('');
 
-    // Validation
     if (formData.password !== formData.password_confirm) {
       setError('Passwords do not match');
       setLoading(false);
@@ -55,7 +54,6 @@ const SignupPage = () => {
       return;
     }
 
-    // Prepare data for API with the selected role from state
     const apiData = {
       username: formData.username,
       email: formData.email,
@@ -64,18 +62,14 @@ const SignupPage = () => {
       phone_number: formData.phone_number,
       password: formData.password,
       password_confirm: formData.password_confirm,
-      role: formData.role, // Using role from state
+      role: formData.role,
     };
 
     try {
       const response = await register(apiData);
-      
-      // Clear stored role if you want
       localStorage.removeItem('preferred_role');
-      
       setSuccess(true);
       
-      // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
@@ -83,7 +77,6 @@ const SignupPage = () => {
     } catch (err) {
       console.error('Signup error:', err);
       
-      // Format error messages from Django
       if (err.response?.data) {
         const errors = err.response.data;
         const errorMessages = [];
@@ -112,12 +105,12 @@ const SignupPage = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-navy-50 via-white to-gold-50 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#eef2f8] via-white to-[#fef8ee] flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
-          <h2 className="text-2xl font-bold text-navy-900 mb-2">
+          <h2 className="text-2xl font-bold text-[#081c2b] mb-2">
             {formData.role === 'lawyer' ? 'Lawyer Account Created!' : 'Account Created!'}
           </h2>
           <p className="text-gray-600 mb-4">
@@ -132,16 +125,16 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-50 via-white to-gold-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2f8] via-white to-[#fef8ee] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="bg-gradient-to-br from-navy-600 to-navy-800 p-2 rounded-xl">
-              <Scale className="w-8 h-8 text-gold-400" />
+            <div className="bg-gradient-to-br from-[#1e4a6e] to-[#153a56] p-2 rounded-xl">
+              <Scale className="w-8 h-8 text-[#f4ab5b]" />
             </div>
-            <span className="text-2xl font-bold text-navy-900">
-              Sheria<span className="text-gold-600">KE</span>
+            <span className="text-2xl font-bold text-[#081c2b]">
+              Sheria<span className="text-[#d47a1a]">KE</span>
             </span>
           </Link>
         </div>
@@ -149,7 +142,7 @@ const SignupPage = () => {
         {/* Signup Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-navy-900">Create Account</h2>
+            <h2 className="text-2xl font-bold text-[#081c2b]">Create Account</h2>
             <p className="text-gray-600 mt-2">Join SheriaKE today</p>
           </div>
 
@@ -160,7 +153,7 @@ const SignupPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Role Selection - Added here */}
+            {/* Role Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 I want to sign up as
@@ -169,9 +162,9 @@ const SignupPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRoleSelect('client')}
-                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all ${
+                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#e89432] transition-all ${
                     formData.role === 'client'
-                      ? 'border-gold-500 bg-gold-50 text-gold-700 ring-2 ring-gold-500'
+                      ? 'border-[#e89432] bg-[#fef8ee] text-[#d47a1a] ring-2 ring-[#e89432]'
                       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -184,9 +177,9 @@ const SignupPage = () => {
                 <button
                   type="button"
                   onClick={() => handleRoleSelect('lawyer')}
-                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-gold-500 transition-all ${
+                  className={`px-4 py-3 border-2 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#e89432] transition-all ${
                     formData.role === 'lawyer'
-                      ? 'border-gold-500 bg-gold-50 text-gold-700 ring-2 ring-gold-500'
+                      ? 'border-[#e89432] bg-[#fef8ee] text-[#d47a1a] ring-2 ring-[#e89432]'
                       : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -210,7 +203,7 @@ const SignupPage = () => {
                   name="first_name"
                   value={formData.first_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="John"
                   required
                 />
@@ -224,7 +217,7 @@ const SignupPage = () => {
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="Doe"
                   required
                 />
@@ -242,7 +235,7 @@ const SignupPage = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="johndoe"
                   required
                 />
@@ -260,7 +253,7 @@ const SignupPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="you@example.com"
                   required
                 />
@@ -278,7 +271,7 @@ const SignupPage = () => {
                   name="phone_number"
                   value={formData.phone_number}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="+254 712 345 678"
                   required={formData.role === 'lawyer'}
                 />
@@ -301,7 +294,7 @@ const SignupPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="••••••"
                   required
                 />
@@ -333,7 +326,7 @@ const SignupPage = () => {
                   name="password_confirm"
                   value={formData.password_confirm}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="••••••"
                   required
                 />
@@ -343,7 +336,7 @@ const SignupPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-navy-600 to-navy-800 text-white py-3 rounded-lg font-semibold hover:from-navy-700 hover:to-navy-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
+              className="w-full bg-gradient-to-r from-[#1e4a6e] to-[#153a56] text-white py-3 rounded-lg font-semibold hover:from-[#2c5f8a] hover:to-[#1e4a6e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
             >
               {loading ? 'Creating account...' : `Sign up as ${formData.role === 'lawyer' ? 'Lawyer' : 'Client'}`}
               {!loading && <ArrowRight className="w-5 h-5" />}
@@ -353,7 +346,7 @@ const SignupPage = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-gold-600 hover:text-gold-700 font-semibold">
+              <Link to="/login" className="text-[#d47a1a] hover:text-[#b86212] font-semibold">
                 Sign in
               </Link>
             </p>

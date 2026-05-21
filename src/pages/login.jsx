@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Scale, Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { useAuth } from "../Components/contexts/AuthContext";
+
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -9,12 +10,11 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth(); // Use the real auth context
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Simple validation
     if (!email || !password) {
       setError('Please fill in all fields');
       return;
@@ -24,16 +24,9 @@ const LoginPage = () => {
     setError('');
 
     try {
-      // Use the real login function from AuthContext
-      // It expects username but we can use email as username (your backend supports both)
       await login(email, password);
       
-      // After successful login, the AuthContext will have the user data
-      // Navigate based on role - we'll get user from context after login
-      // For now, let's wait a tiny bit for the context to update
       setTimeout(() => {
-        // The redirect will happen automatically based on role
-        // We'll let the ProtectedRoute handle it, but we can also do manual redirect
         navigate('/dashboard');
       }, 100);
       
@@ -46,16 +39,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-navy-50 via-white to-gold-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#eef2f8] via-white to-[#fef8ee] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2">
-            <div className="bg-gradient-to-br from-navy-600 to-navy-800 p-2 rounded-xl">
-              <Scale className="w-8 h-8 text-gold-400" />
+            <div className="bg-gradient-to-br from-[#1e4a6e] to-[#153a56] p-2 rounded-xl">
+              <Scale className="w-8 h-8 text-[#f4ab5b]" />
             </div>
-            <span className="text-2xl font-bold text-navy-900">
-              Sheria<span className="text-gold-600">KE</span>
+            <span className="text-2xl font-bold text-[#081c2b]">
+              Sheria<span className="text-[#d47a1a]">KE</span>
             </span>
           </Link>
         </div>
@@ -63,7 +56,7 @@ const LoginPage = () => {
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-navy-900">Welcome Back</h2>
+            <h2 className="text-2xl font-bold text-[#081c2b]">Welcome Back</h2>
             <p className="text-gray-600 mt-2">Sign in to your account</p>
           </div>
 
@@ -84,7 +77,7 @@ const LoginPage = () => {
                   type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="you@example.com or username"
                   required
                 />
@@ -101,7 +94,7 @@ const LoginPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
                   placeholder="••••••"
                   required
                 />
@@ -121,10 +114,10 @@ const LoginPage = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2">
-                <input type="checkbox" className="w-4 h-4 text-gold-600 rounded border-gray-300" />
+                <input type="checkbox" className="w-4 h-4 text-[#d47a1a] rounded border-gray-300" />
                 <span className="text-sm text-gray-600">Remember me</span>
               </label>
-              <a href="/forgot-password" className="text-sm text-gold-600 hover:text-gold-700">
+              <a href="/forgot-password" className="text-sm text-[#d47a1a] hover:text-[#b86212]">
                 Forgot password?
               </a>
             </div>
@@ -132,7 +125,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-navy-600 to-navy-800 text-white py-3 rounded-lg font-semibold hover:from-navy-700 hover:to-navy-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-[#1e4a6e] to-[#153a56] text-white py-3 rounded-lg font-semibold hover:from-[#2c5f8a] hover:to-[#1e4a6e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? 'Signing in...' : 'Sign In'}
               {!loading && <ArrowRight className="w-5 h-5" />}
@@ -142,7 +135,7 @@ const LoginPage = () => {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-gold-600 hover:text-gold-700 font-semibold">
+              <Link to="/signup" className="text-[#d47a1a] hover:text-[#b86212] font-semibold">
                 Sign up
               </Link>
             </p>
