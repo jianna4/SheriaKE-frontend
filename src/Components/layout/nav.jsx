@@ -51,7 +51,7 @@ const Header = () => {
     if (user?.role === 'lawyer') {
       return [
         ...commonItems,
-        { name: 'Find Cases', href: '/lawyer/cases' },
+        { name: 'Find Cases', href: '/cases' },
         { name: 'My Applications', href: '/lawyer/applications' },
         { name: 'My Profile', href: '/lawyer/profile' },
       ];

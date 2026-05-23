@@ -12,6 +12,12 @@ import ProtectedRoute from './Components/ProtectedRoute'
 import LawyerDashboard from './pages/LawyerDashboard'
 import ClientDashboard from './pages/ClientDashboard'
 import './index.css'
+
+import FindLawyers from './pages/AllLawyres'
+import AllCases from './pages/Allcases'
+import LawyerProfile from './pages/lawyerdetail'
+import LawyerCases from './Components/lawyers/laywercases'
+
 function App() {
   return (
     <AuthProvider>
@@ -41,6 +47,29 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="/lawyers" element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <FindLawyers />
+              </ProtectedRoute>
+            }
+             />
+            <Route path="/cases" element={
+              <ProtectedRoute allowedRoles={['client', 'lawyer']}>
+                <AllCases />
+              </ProtectedRoute>
+            }
+            />
+            <Route path="/lawyer/profile" element={
+              <ProtectedRoute allowedRoles={['client', 'lawyer']}>
+                <LawyerProfile />
+              </ProtectedRoute>
+            } 
+            />
+              <Route path="/lawyer/applications" element={
+                <ProtectedRoute allowedRoles={['client']}>
+                  <LawyerCases />
+                </ProtectedRoute>
+              } />
           </Routes>
         </Layout>
       </div>

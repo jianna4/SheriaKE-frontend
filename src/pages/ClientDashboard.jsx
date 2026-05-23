@@ -5,9 +5,8 @@ import {
   Users, FileText, MessageCircle, Star, 
   Plus, Search, Clock, CheckCircle, AlertCircle 
 } from 'lucide-react';
-
+import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
-import {useAuth} from "../Components/contexts/AuthContext";
 
 const ClientDashboard = () => {
   const { user } = useAuth();
@@ -28,21 +27,44 @@ const ClientDashboard = () => {
     try {
       // Fetch client's cases
       const casesResponse = await api.get('/marketplace/cases/');
-      setCases(casesResponse.data);
+      console.log('API Response:', casesResponse.data);
+      console.log('=== API RESPONSE DEBUG ===');
+    console.log('Full response:', casesResponse);
+    console.log('Response data type:', typeof casesResponse.data);
+    console.log('Response data:', casesResponse.data);
+    console.log('Is it an array?', Array.isArray(casesResponse.data));
+    console.log('Does it have results?', casesResponse.data?.results);
+    console.log('Type of results:', typeof casesResponse.data?.results);
+    console.log('Is results an array?', Array.isArray(casesResponse.data?.results));
+      let casesData = [];
+      if (casesResponse.data && casesResponse.data.results) {
+        // Paginated response
+        casesData = casesResponse.data.results;
+      } else if (Array.isArray(casesResponse.data)) {
+        // Direct array response
+        casesData = casesResponse.data;
+      } else {
+        // Fallback
+        casesData = [];
+      }
       
-      // Calculate stats
-      const active = casesResponse.data.filter(c => c.status === 'open').length;
-      const pending = casesResponse.data.filter(c => c.status === 'pending').length;
-      const completed = casesResponse.data.filter(c => c.status === 'completed').length;
+      console.log('Extracted cases:', casesData);
+      setCases(Array.isArray(casesData) ? casesData : []);
+      
+      // Calculate stats safely
+      const active = casesData.filter(c => c.status === 'open').length;
+      const pending = casesData.filter(c => c.status === 'pending').length;
+      const completed = casesData.filter(c => c.status === 'completed').length;
       
       setStats({
         activeCases: active,
         pendingApplications: pending,
         completedCases: completed,
-        messagesUnread: 0, // You can implement message count later
+        messagesUnread: 0,
       });
     } catch (error) {
       console.error('Error fetching client data:', error);
+      setCases([]);
     } finally {
       setLoading(false);
     }
@@ -58,7 +80,7 @@ const ClientDashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d47a1a]"></div>
       </div>
     );
   }
@@ -67,16 +89,16 @@ const ClientDashboard = () => {
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}
-        <div className="bg-gradient-to-r from-navy-900 to-navy-800 rounded-2xl p-8 mb-8 text-black">
+        <div className="bg-gradient-to-r from-[#1e4a6e] to-[#153a56] rounded-2xl p-8 mb-8 text-white">
           <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user?.first_name || user?.username}!
+            Welcome back, {user?.first_name || user?.username || 'User'}!
           </h1>
-          <p className="text-gray-900">
+          <p className="text-gray-300">
             Find the right lawyer for your legal needs and track your cases.
           </p>
           <Link
             to="/client/post-case"
-            className="inline-flex items-center gap-2 mt-4 px-6 py-2 bg-gold-500 text-navy-900 rounded-lg font-semibold hover:bg-gold-400 transition"
+            className="inline-flex items-center gap-2 mt-4 px-6 py-2 bg-[#d47a1a] text-white rounded-lg font-semibold hover:bg-[#b86212] transition"
           >
             <Plus className="w-4 h-4" />
             Post a New Case
@@ -99,7 +121,7 @@ const ClientDashboard = () => {
                   <div className={`p-3 rounded-lg ${colorClasses[stat.color]}`}>
                     <Icon className="w-6 h-6" />
                   </div>
-                  <span className="text-2xl font-bold text-navy-900">{stat.value}</span>
+                  <span className="text-2xl font-bold text-[#081c2b]">{stat.value}</span>
                 </div>
                 <h3 className="text-gray-600 font-medium">{stat.title}</h3>
               </div>
@@ -111,8 +133,8 @@ const ClientDashboard = () => {
         <div className="bg-white rounded-xl shadow-sm">
           <div className="p-6 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-navy-900">Recent Cases</h2>
-              <Link to="/client/cases" className="text-gold-600 hover:text-gold-700">
+              <h2 className="text-xl font-bold text-[#081c2b]">Recent Cases</h2>
+              <Link to="/client/cases" className="text-[#d47a1a] hover:text-[#b86212]">
                 View All →
               </Link>
             </div>
@@ -124,7 +146,7 @@ const ClientDashboard = () => {
                 <p>No cases yet. Post your first case to get started!</p>
                 <Link
                   to="/client/post-case"
-                  className="inline-block mt-3 text-gold-600 hover:text-gold-700"
+                  className="inline-block mt-3 text-[#d47a1a] hover:text-[#b86212]"
                 >
                   Post a Case →
                 </Link>
@@ -133,23 +155,26 @@ const ClientDashboard = () => {
               cases.slice(0, 5).map((caseItem) => (
                 <div key={caseItem.id} className="p-6 hover:bg-gray-50 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-navy-900">{caseItem.title}</h3>
+                    <h3 className="font-semibold text-[#081c2b]">{caseItem.title}</h3>
                     <span className={`px-2 py-1 text-xs rounded-full ${
                       caseItem.status === 'open' ? 'bg-green-100 text-green-700' :
                       caseItem.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      caseItem.status === 'completed' ? 'bg-gray-100 text-gray-700' :
                       'bg-gray-100 text-gray-700'
                     }`}>
-                      {caseItem.status}
+                      {caseItem.status?.toUpperCase() || 'UNKNOWN'}
                     </span>
                   </div>
-                  <p className="text-gray-600 text-sm mb-3">{caseItem.description}</p>
+                  <p className="text-gray-600 text-sm mb-3">
+                    {caseItem.description?.substring(0, 150)}...
+                  </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-500">
-                      Posted: {new Date(caseItem.created_at).toLocaleDateString()}
+                      Budget: KES {caseItem.budget_min} - {caseItem.budget_max}
                     </span>
                     <Link
                       to={`/client/cases/${caseItem.id}`}
-                      className="text-gold-600 hover:text-gold-700"
+                      className="text-[#d47a1a] hover:text-[#b86212]"
                     >
                       View Details →
                     </Link>
@@ -161,16 +186,16 @@ const ClientDashboard = () => {
         </div>
 
         {/* Find Lawyers CTA */}
-        <div className="mt-8 bg-gradient-to-r from-gold-400 to-gold-500 rounded-xl p-8 text-center">
-          <h3 className="text-2xl font-bold text-navy-900 mb-2">
+        <div className="mt-8 bg-gradient-to-r from-[#d47a1a] to-[#e89432] rounded-xl p-8 text-center">
+          <h3 className="text-2xl font-bold text-white mb-2">
             Need Legal Help?
           </h3>
-          <p className="text-navy-800 mb-4">
+          <p className="text-white/90 mb-4">
             Browse our directory of experienced lawyers
           </p>
           <Link
             to="/lawyers"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-navy-900 text-white rounded-lg font-semibold hover:bg-navy-800 transition"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-white text-[#d47a1a] rounded-lg font-semibold hover:bg-gray-100 transition"
           >
             <Search className="w-4 h-4" />
             Find a Lawyer
