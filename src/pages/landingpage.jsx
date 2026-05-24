@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Scale, 
   MessageCircle, 
@@ -49,11 +50,11 @@ const LandingPage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <a href="/chat" className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e89432] to-[#d47a1a] text-[#081c2b] rounded-xl font-semibold text-lg hover:from-[#f4ab5b] hover:to-[#e89432] transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
+              <Link to="/chat" className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e89432] to-[#d47a1a] text-[#081c2b] rounded-xl font-semibold text-lg hover:from-[#f4ab5b] hover:to-[#e89432] transition-all transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <MessageCircle className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                 Start Free Consultation
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </a>
+              </Link>
               <a href="#how-it-works" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-[#e89432] text-[#f4ab5b] rounded-xl font-semibold text-lg hover:bg-[#e89432]/10 transition-all">
                 <Play className="w-5 h-5" />
                 Watch Demo
@@ -105,8 +106,8 @@ const LandingPage = () => {
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* AI Legal Assistant Card - Link to /chat */}
-            <a 
-              href="/chat" 
+            <Link 
+              to="/chat" 
               className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 block"
             >
               <div className="w-16 h-16 bg-gradient-to-br from-[#2c5f8a] to-[#1e4a6e] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -120,11 +121,11 @@ const LandingPage = () => {
                 <Star className="w-4 h-4 fill-[#e89432] text-[#e89432]" />
                 <span>Free 10 questions to start</span>
               </div>
-            </a>
+            </Link>
 
             {/* Verified Lawyers Card - Link to /lawyers */}
-            <a 
-              href="/lawyers" 
+            <Link 
+              to="/lawyers" 
               className="group bg-gradient-to-br from-[#fef8ee] to-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-[#fad9ad] block"
             >
               <div className="w-16 h-16 bg-gradient-to-br from-[#e89432] to-[#d47a1a] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -138,11 +139,11 @@ const LandingPage = () => {
                 <Shield className="w-4 h-4" />
                 <span>100% verified professionals</span>
               </div>
-            </a>
+            </Link>
 
             {/* Case Management Card - Link to /client/post-case */}
-            <a 
-              href="/client/post-case" 
+            <Link 
+              to="/client/post-case" 
               className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 block"
             >
               <div className="w-16 h-16 bg-gradient-to-br from-[#2c5f8a] to-[#1e4a6e] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
@@ -156,7 +157,7 @@ const LandingPage = () => {
                 <Lock className="w-4 h-4" />
                 <span>End-to-end encrypted</span>
               </div>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -336,14 +337,14 @@ const LandingPage = () => {
             Join thousands of Kenyans who trust SheriAKE for their employment law questions
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="/signup" className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e89432] to-[#d47a1a] text-[#081c2b] rounded-xl font-semibold text-lg hover:from-[#f4ab5b] hover:to-[#e89432] transition-all transform hover:scale-105 shadow-xl">
+            <Link to="/signup" className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e89432] to-[#d47a1a] text-[#081c2b] rounded-xl font-semibold text-lg hover:from-[#f4ab5b] hover:to-[#e89432] transition-all transform hover:scale-105 shadow-xl">
               Create Free Account
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </a>
-            <a href="/lawyers" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-[#e89432] text-[#f4ab5b] rounded-xl font-semibold text-lg hover:bg-[#e89432]/10 transition-all">
+            </Link>
+            <Link to="/lawyers" className="inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-[#e89432] text-[#f4ab5b] rounded-xl font-semibold text-lg hover:bg-[#e89432]/10 transition-all">
               Browse Lawyers
               <Users className="w-5 h-5" />
-            </a>
+            </Link>
           </div>
           <div className="flex items-center justify-center gap-6 mt-8 text-gray-400 text-sm">
             <span className="flex items-center gap-2">
