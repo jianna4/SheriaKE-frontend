@@ -206,7 +206,7 @@ const Header = () => {
                             Lawyer Dashboard
                           </Link>
                           <Link
-                            to="/lawyer/profile"
+                            to="/lawyer/profile-setup"
                             className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
                             onClick={() => setIsProfileOpen(false)}
                           >
@@ -214,7 +214,7 @@ const Header = () => {
                             My Law Profile
                           </Link>
                           <Link
-                            to="/lawyer/cases"
+                            to="/lawyer/applications"
                             className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
                             onClick={() => setIsProfileOpen(false)}
                           >

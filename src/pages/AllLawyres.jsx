@@ -345,7 +345,7 @@ const FindLawyers = () => {
                           className="px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg font-semibold hover:bg-[#d47a1a] hover:text-white transition"
                         >
                           <MessageCircle className="w-4 h-4 inline mr-1" />
-                          Message
+                          Message to consult
                         </Link>
                       )}
                       

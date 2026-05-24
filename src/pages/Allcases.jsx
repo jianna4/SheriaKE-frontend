@@ -26,14 +26,26 @@ const AllCases = () => {
   const fetchCases = async () => {
     try {
       const response = await api.get('/marketplace/cases/');
-      setCases(response.data);
+      console.log('Cases API response:', response.data);
+
+      // ✅ FIX: Extract the results array from paginated response
+      let CasesData = [];
+      if (response.data && Array.isArray(response.data.results)) {
+        CasesData = response.data.results;
+      } else if (Array.isArray(response.data)) {
+        CasesData = response.data;
+      } else {
+        CasesData = [];
+      }
+
+      setCases(CasesData);
     } catch (error) {
       console.error('Error fetching cases:', error);
     } finally {
       setLoading(false);
     }
   };
-
+  
   const fetchPracticeAreas = async () => {
     try {
       const response = await api.get('/marketplace/practice-areas/');

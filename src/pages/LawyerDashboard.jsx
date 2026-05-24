@@ -174,7 +174,7 @@ const LawyerDashboard = () => {
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-navy-900">Open Cases</h2>
-                <Link to="/lawyer/cases" className="text-gold-600 hover:text-gold-700">
+                <Link to="/cases" className="text-gold-600 hover:text-gold-700">
                   Browse All →
                 </Link>
               </div>
@@ -230,7 +230,7 @@ const LawyerDashboard = () => {
                   <FileText className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                   <p>You haven't applied to any cases yet.</p>
                   <Link
-                    to="/lawyer/cases"
+                    to="/cases"
                     className="inline-block mt-3 text-gold-600 hover:text-gold-700"
                   >
                     Browse Cases →
@@ -268,7 +268,7 @@ const LawyerDashboard = () => {
         {/* Quick Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            to="/lawyer/profile"
+            to="/lawyer/:id"
             className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition text-center"
           >
             <Briefcase className="w-8 h-8 text-gold-500 mx-auto mb-2" />
@@ -276,7 +276,7 @@ const LawyerDashboard = () => {
             <p className="text-sm text-gray-500 mt-1">Keep your information current</p>
           </Link>
           <Link
-            to="/lawyer/cases"
+            to="/cases"
             className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition text-center"
           >
             <TrendingUp className="w-8 h-8 text-gold-500 mx-auto mb-2" />

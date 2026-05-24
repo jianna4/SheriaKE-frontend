@@ -15,8 +15,17 @@ import './index.css'
 
 import FindLawyers from './pages/AllLawyres'
 import AllCases from './pages/Allcases'
-import LawyerProfile from './pages/lawyerdetail'
+import CaseDetail from './pages/clientbyid'
+import PostCase from './pages/postcase'
+import ClientCases from './pages/clientsposts'
+
+import LawyerProfileSetup from './pages/lawyerEdits'
 import LawyerCases from './Components/lawyers/laywercases'
+
+import MyLawyerProfile from './pages/lawyerprolife'
+import PublicLawyerProfile from './pages/lawyerprofileforclient'
+import LawyerApplications from './pages/lapplications'
+import ApplyToCase from './pages/lapply'
 
 function App() {
   return (
@@ -38,6 +47,17 @@ function App() {
                 </ProtectedRoute>
               } 
             />
+            <Route path="client/post-case" element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <PostCase />
+              </ProtectedRoute>
+            } />
+            <Route path="/client/cases" element={
+              <ProtectedRoute allowedRoles={['client']}>
+                <ClientCases />
+              </ProtectedRoute>
+            } />
+            
             {/* Lawyer Routes */}
             <Route 
               path="/lawyer/dashboard" 
@@ -54,20 +74,41 @@ function App() {
             }
              />
             <Route path="/cases" element={
-              <ProtectedRoute allowedRoles={['client', 'lawyer']}>
+              <ProtectedRoute allowedRoles={[ 'lawyer']}>
                 <AllCases />
               </ProtectedRoute>
             }
             />
-            <Route path="/lawyer/profile" element={
-              <ProtectedRoute allowedRoles={['client', 'lawyer']}>
-                <LawyerProfile />
-              </ProtectedRoute>
-            } 
-            />
-              <Route path="/lawyer/applications" element={
+          
+              <Route path="/lawyer/profile" element={
+                <ProtectedRoute allowedRoles={['lawyer','client']}>
+                  <MyLawyerProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/lawyer/profile-setup" element={
+                <ProtectedRoute allowedRoles={['lawyer']}>
+                  <LawyerProfileSetup />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/lawyers/:id" element={
                 <ProtectedRoute allowedRoles={['client']}>
-                  <LawyerCases />
+                  <PublicLawyerProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/lawyer/applications" element={
+                <ProtectedRoute allowedRoles={['lawyer']}>
+                  <LawyerApplications />
+                </ProtectedRoute>
+              } />
+              <Route path="/lawyer/cases/:id/apply" element={
+                <ProtectedRoute allowedRoles={['lawyer']}>
+                  <ApplyToCase />
+                </ProtectedRoute>
+              } />
+              <Route path="/client/cases/:id" element={
+                <ProtectedRoute allowedRoles={['client']}>
+                  <CaseDetail />
                 </ProtectedRoute>
               } />
           </Routes>
