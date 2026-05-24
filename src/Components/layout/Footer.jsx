@@ -2,7 +2,7 @@ import { Scale } from 'lucide-react'
 
 export default function Footer (){
 return(
-    <footer className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-lg">
+    <footer className=" bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200 dark:border-gray-700 shadow-lg">
         <div className=" p-2
             max-sm:p-1
         ">
