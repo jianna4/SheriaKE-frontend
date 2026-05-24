@@ -17,7 +17,7 @@ const api = axios.create({
   },
 });
 
-const App = () => {
+const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -36,11 +36,11 @@ const App = () => {
   useEffect(() => {
     const checkBackend = async () => {
       try {
-        await api.get('/health');
+        await api.get('/legal/health');
         setBackendStatus('connected');
-        console.log('✅ Backend connected:', API_BASE_URL);
+        console.log('Backend connected:');
       } catch (error) {
-        console.error('❌ Backend connection failed:', error);
+        console.error(' Backend connection failed:', error);
         setBackendStatus('disconnected');
       }
     };
@@ -134,14 +134,12 @@ How can I assist you today?`,
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        content: `❌ **Backend not connected**
+        content: ` **Backend not connected**
 
 Please make sure:
 1. The backend server is running
-2. Your .env file has the correct VITE_API_URL
+2. Your .env file has the correct backend URL 
 3. The backend URL is accessible
-
-Current backend URL: \`${API_BASE_URL}\`
 
 Check the browser console for more details.`,
         timestamp: new Date()
@@ -162,7 +160,7 @@ Check the browser console for more details.`,
     setLoading(true);
 
     try {
-      const response = await api.post('/ask', {
+      const response = await api.post('/legal/ask/', {
         query: input,
         role: role
       });
@@ -179,7 +177,7 @@ Check the browser console for more details.`,
     } catch (error) {
       console.error('Error details:', error.response?.data || error.message);
       
-      let errorContent = `❌ **Sorry, I encountered an error**\n\n`;
+      let errorContent = ` **Sorry, I encountered an error**\n\n`;
       
       if (error.response) {
         // Server responded with error
@@ -188,10 +186,10 @@ Check the browser console for more details.`,
       } else if (error.request) {
         // No response received
         errorContent += `**Cannot reach backend server**\n\n`;
-        errorContent += `Backend URL: \`${API_BASE_URL}\`\n\n`;
+
         errorContent += `Please verify:\n`;
         errorContent += `1. The backend is deployed and running\n`;
-        errorContent += `2. Your VITE_API_URL is correct\n`;
+        errorContent += `2. Your backend URL is correct\n`;
         errorContent += `3. CORS is properly configured on the backend\n`;
       } else {
         errorContent += `**Error:** ${error.message}\n`;
@@ -288,4 +286,4 @@ useEffect(() => {
   );
 };
 
-export default App;
+export default Chat;

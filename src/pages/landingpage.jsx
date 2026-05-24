@@ -104,7 +104,11 @@ const LandingPage = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+            {/* AI Legal Assistant Card - Link to /chat */}
+            <a 
+              href="/chat" 
+              className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 block"
+            >
               <div className="w-16 h-16 bg-gradient-to-br from-[#2c5f8a] to-[#1e4a6e] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <MessageCircle className="w-8 h-8 text-white" />
               </div>
@@ -116,9 +120,13 @@ const LandingPage = () => {
                 <Star className="w-4 h-4 fill-[#e89432] text-[#e89432]" />
                 <span>Free 10 questions to start</span>
               </div>
-            </div>
+            </a>
 
-            <div className="group bg-gradient-to-br from-[#fef8ee] to-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-[#fad9ad]">
+            {/* Verified Lawyers Card - Link to /lawyers */}
+            <a 
+              href="/lawyers" 
+              className="group bg-gradient-to-br from-[#fef8ee] to-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-[#fad9ad] block"
+            >
               <div className="w-16 h-16 bg-gradient-to-br from-[#e89432] to-[#d47a1a] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <Users className="w-8 h-8 text-white" />
               </div>
@@ -130,9 +138,13 @@ const LandingPage = () => {
                 <Shield className="w-4 h-4" />
                 <span>100% verified professionals</span>
               </div>
-            </div>
+            </a>
 
-            <div className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100">
+            {/* Case Management Card - Link to /client/post-case */}
+            <a 
+              href="/client/post-case" 
+              className="group bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 block"
+            >
               <div className="w-16 h-16 bg-gradient-to-br from-[#2c5f8a] to-[#1e4a6e] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <FileText className="w-8 h-8 text-white" />
               </div>
@@ -144,7 +156,7 @@ const LandingPage = () => {
                 <Lock className="w-4 h-4" />
                 <span>End-to-end encrypted</span>
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </section>
