@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Scale, Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle, Briefcase, Users } from 'lucide-react';
-
+import { Scale, Mail, Lock, Eye, EyeOff, User, Phone, ArrowRight, CheckCircle, Briefcase, Users, AlertCircle, Check } from 'lucide-react';
 import { useAuth } from "../Components/contexts/AuthContext";
 
 const SignupPage = () => {
@@ -19,14 +18,53 @@ const SignupPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState([]);
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+
+    // Validate password in real-time
+    if (name === 'password') {
+      validatePassword(value);
+    }
+  };
+
+  const validatePassword = (password) => {
+    const errors = [];
+    
+    // Check minimum length
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    }
+    
+    // Check for uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter');
+    }
+    
+    // Check for lowercase letter
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter');
+    }
+    
+    // Check for number
+    if (!/\d/.test(password)) {
+      errors.push('At least one number');
+    }
+    
+    // Check for special character
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('At least one special character (!@#$%^&* etc.)');
+    }
+    
+    setPasswordErrors(errors);
+    return errors.length === 0;
   };
 
   const handleRoleSelect = (role) => {
@@ -42,14 +80,17 @@ const SignupPage = () => {
     setLoading(true);
     setError('');
 
+    // Password validation
     if (formData.password !== formData.password_confirm) {
       setError('Passwords do not match');
       setLoading(false);
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    // Validate password strength
+    const isPasswordValid = validatePassword(formData.password);
+    if (!isPasswordValid) {
+      setError('Please fix the password requirements below');
       setLoading(false);
       return;
     }
@@ -74,60 +115,68 @@ const SignupPage = () => {
         navigate('/login');
       }, 2000);
       
-    } // In your signup.jsx, update the error handling section
-catch (err) {
-  console.error('🔴 SIGNUP ERROR FULL OBJECT:', err);
-  console.error('🔴 SIGNUP ERROR RESPONSE:', err.response);
-  console.error('🔴 SIGNUP ERROR DATA:', err.response?.data);
-  console.error('🔴 SIGNUP ERROR STATUS:', err.response?.status);
-  
-  // Try to get the actual error message from Django
-  if (err.response?.data) {
-    const errorData = err.response.data;
-    
-    // Django REST Framework often returns errors in this format
-    if (typeof errorData === 'object') {
-      // Check for field-specific errors
-      const fieldErrors = [];
-      for (const [field, messages] of Object.entries(errorData)) {
-        if (Array.isArray(messages)) {
-          fieldErrors.push(`${field}: ${messages.join(', ')}`);
-        } else if (typeof messages === 'string') {
-          fieldErrors.push(`${field}: ${messages}`);
-        } else if (messages && typeof messages === 'object') {
-          // Handle nested errors
-          for (const [subField, subMessages] of Object.entries(messages)) {
-            if (Array.isArray(subMessages)) {
-              fieldErrors.push(`${field}.${subField}: ${subMessages.join(', ')}`);
+    } catch (err) {
+      console.error(' SIGNUP ERROR FULL OBJECT:', err);
+      console.error(' SIGNUP ERROR RESPONSE:', err.response);
+      console.error(' SIGNUP ERROR DATA:', err.response?.data);
+      console.error(' SIGNUP ERROR STATUS:', err.response?.status);
+      
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        
+        if (typeof errorData === 'object') {
+          const fieldErrors = [];
+          for (const [field, messages] of Object.entries(errorData)) {
+            if (Array.isArray(messages)) {
+              fieldErrors.push(`${field}: ${messages.join(', ')}`);
+            } else if (typeof messages === 'string') {
+              fieldErrors.push(`${field}: ${messages}`);
+            } else if (messages && typeof messages === 'object') {
+              for (const [subField, subMessages] of Object.entries(messages)) {
+                if (Array.isArray(subMessages)) {
+                  fieldErrors.push(`${field}.${subField}: ${subMessages.join(', ')}`);
+                }
+              }
             }
           }
+          
+          if (fieldErrors.length > 0) {
+            setError(fieldErrors.join(' | '));
+          } else if (errorData.detail) {
+            setError(errorData.detail);
+          } else if (errorData.non_field_errors) {
+            setError(errorData.non_field_errors.join(', '));
+          } else {
+            setError(JSON.stringify(errorData, null, 2));
+          }
+        } else if (typeof errorData === 'string') {
+          setError(errorData);
+        } else {
+          setError('Registration failed. Please check your information.');
         }
-      }
-      
-      if (fieldErrors.length > 0) {
-        setError(fieldErrors.join(' | '));
-      } else if (errorData.detail) {
-        setError(errorData.detail);
-      } else if (errorData.non_field_errors) {
-        setError(errorData.non_field_errors.join(', '));
+      } else if (err.message) {
+        setError(`Network error: ${err.message}`);
       } else {
-        // If we can't parse, show the raw error
-        setError(JSON.stringify(errorData, null, 2));
+        setError('Unable to connect to server. Please check if backend is running.');
       }
-    } else if (typeof errorData === 'string') {
-      setError(errorData);
-    } else {
-      setError('Registration failed. Please check your information.');
-    }
-  } else if (err.message) {
-    setError(`Network error: ${err.message}`);
-  } else {
-    setError('Unable to connect to server. Please check if backend is running.');
-  }
-} finally {
+    } finally {
       setLoading(false);
     }
   };
+
+  // Password strength indicator component
+  const PasswordRequirement = ({ text, isValid }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {isValid ? (
+        <Check className="w-4 h-4 text-green-500" />
+      ) : (
+        <AlertCircle className="w-4 h-4 text-gray-400" />
+      )}
+      <span className={isValid ? 'text-green-600' : 'text-gray-600'}>
+        {text}
+      </span>
+    </div>
+  );
 
   if (success) {
     return (
@@ -320,7 +369,11 @@ catch (err) {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
+                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition ${
+                    formData.password && passwordErrors.length === 0 ? 'border-green-500' :
+                    formData.password && passwordErrors.length > 0 ? 'border-red-500' :
+                    'border-gray-300'
+                  }`}
                   placeholder="••••••"
                   required
                 />
@@ -336,9 +389,33 @@ catch (err) {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Must be at least 6 characters
-              </p>
+
+              {/* Password Requirements */}
+              {formData.password && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-1">
+                  <p className="text-xs font-medium text-gray-700 mb-2">Password must contain:</p>
+                  <PasswordRequirement 
+                    text="At least 8 characters"
+                    isValid={formData.password.length >= 8}
+                  />
+                  <PasswordRequirement 
+                    text="At least one uppercase letter"
+                    isValid={/[A-Z]/.test(formData.password)}
+                  />
+                  <PasswordRequirement 
+                    text="At least one lowercase letter"
+                    isValid={/[a-z]/.test(formData.password)}
+                  />
+                  <PasswordRequirement 
+                    text="At least one number"
+                    isValid={/\d/.test(formData.password)}
+                  />
+                  <PasswordRequirement 
+                    text="At least one special character (!@#$%^&* etc.)"
+                    isValid={/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)}
+                  />
+                </div>
+              )}
             </div>
 
             <div>
@@ -352,16 +429,26 @@ catch (err) {
                   name="password_confirm"
                   value={formData.password_confirm}
                   onChange={handleChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition"
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none transition ${
+                    formData.password_confirm && formData.password === formData.password_confirm ? 'border-green-500' :
+                    formData.password_confirm && formData.password !== formData.password_confirm ? 'border-red-500' :
+                    'border-gray-300'
+                  }`}
                   placeholder="••••••"
                   required
                 />
               </div>
+              {formData.password_confirm && formData.password !== formData.password_confirm && (
+                <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
+              )}
+              {formData.password_confirm && formData.password === formData.password_confirm && (
+                <p className="text-xs text-green-500 mt-1">Passwords match ✓</p>
+              )}
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || passwordErrors.length > 0 || formData.password !== formData.password_confirm}
               className="w-full bg-gradient-to-r from-[#1e4a6e] to-[#153a56] text-white py-3 rounded-lg font-semibold hover:from-[#2c5f8a] hover:to-[#1e4a6e] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-6"
             >
               {loading ? 'Creating account...' : `Sign up as ${formData.role === 'lawyer' ? 'Lawyer' : 'Client'}`}
