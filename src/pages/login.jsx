@@ -301,17 +301,7 @@ const LoginPage = () => {
             </p>
           </div>
 
-          {/* Optional: Demo credentials (remove in production) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-gray-600 font-medium">Demo Accounts:</p>
-              <div className="mt-1 text-xs text-gray-500 space-y-1">
-                <p>Client: client@demo.com / password123</p>
-                <p>Lawyer: lawyer@demo.com / password123</p>
-                <p>Admin: admin@demo.com / password123</p>
-              </div>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>
