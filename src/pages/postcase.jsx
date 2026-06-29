@@ -1,11 +1,9 @@
 // src/pages/PostCase.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Briefcase, DollarSign, MapPin, Clock, 
-  Send, AlertCircle, CheckCircle, ArrowLeft,
-  FileText, Users, Scale, Building, Calendar,
-  HelpCircle, ChevronDown, ChevronUp
+  DollarSign, MapPin, Send, AlertCircle, CheckCircle,
+  FileText, Users, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
@@ -28,7 +26,7 @@ const PostCase = () => {
     urgency_level: 'medium',
     county: '',
     city: '',
-    budget_type: 'fixed',
+    budget_type: 'negotiable',  // Fixed: "negotiable" (backend expects this)
     budget_min: '',
     budget_max: '',
     preferred_lawyer_gender: 'any',
@@ -101,19 +99,27 @@ const PostCase = () => {
     'Settlement'
   ];
 
+  // Fetch practice areas with cleanup
   useEffect(() => {
-    fetchPracticeAreas();
-  }, []);
+    let isMounted = true;
 
-  const fetchPracticeAreas = async () => {
-    try {
-      const response = await api.get('/marketplace/practice-areas/');
-      const areas = response.data?.results || response.data || [];
-      setPracticeAreas(areas);
-    } catch (error) {
-      console.error('Error fetching practice areas:', error);
-    }
-  };
+    const fetchPracticeAreas = async () => {
+      try {
+        const response = await api.get('/marketplace/practice-areas/');
+        if (!isMounted) return;
+        const areas = response.data?.results || response.data || [];
+        setPracticeAreas(areas);
+      } catch (error) {
+        console.error('Error fetching practice areas:', error);
+      }
+    };
+
+    fetchPracticeAreas();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -186,9 +192,34 @@ const PostCase = () => {
       
     } catch (error) {
       console.error('Error posting case:', error);
-      const errorMsg = error.response?.data?.detail || 
-                       error.response?.data?.message || 
-                       'Failed to post case. Please try again.';
+      
+      // Enhanced error handling - parse field-specific errors
+      const responseData = error.response?.data;
+      let errorMsg = 'Failed to post case. Please try again.';
+      
+      if (responseData && typeof responseData === 'object') {
+        // Check for field-specific errors
+        const fieldErrors = Object.entries(responseData)
+          .filter(([field]) => field !== 'non_field_errors')
+          .map(([field, messages]) => {
+            const text = Array.isArray(messages) ? messages.join(' ') : messages;
+            return `${field}: ${text}`;
+          })
+          .join(' | ');
+        
+        if (fieldErrors) {
+          errorMsg = fieldErrors;
+        } else if (responseData.detail) {
+          errorMsg = responseData.detail;
+        } else if (responseData.message) {
+          errorMsg = responseData.message;
+        } else if (responseData.non_field_errors) {
+          errorMsg = Array.isArray(responseData.non_field_errors) 
+            ? responseData.non_field_errors.join(' ') 
+            : responseData.non_field_errors;
+        }
+      }
+      
       setError(errorMsg);
     } finally {
       setLoading(false);
@@ -227,9 +258,9 @@ const PostCase = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
-              {error}
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div className="whitespace-pre-line">{error}</div>
             </div>
           )}
 
@@ -249,7 +280,7 @@ const PostCase = () => {
                   name="practice_area"
                   value={caseData.practice_area}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   required
                 >
                   <option value="">Select Practice Area</option>
@@ -268,7 +299,7 @@ const PostCase = () => {
                   name="title"
                   value={caseData.title}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   placeholder="e.g., Need help with unfair termination"
                   required
                 />
@@ -283,7 +314,7 @@ const PostCase = () => {
                   rows={6}
                   value={caseData.description}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none resize-y"
                   placeholder="Describe your legal issue in detail. Include relevant dates, parties involved, and what you need help with..."
                   required
                 />
@@ -301,7 +332,7 @@ const PostCase = () => {
                     name="legal_category"
                     value={caseData.legal_category}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   >
                     <option value="">Select Category</option>
                     {legalCategories.map(cat => (
@@ -312,7 +343,7 @@ const PostCase = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Urgency Level
+                    Urgency Level <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-2">
                     {urgencyOptions.map(option => (
@@ -320,7 +351,7 @@ const PostCase = () => {
                         key={option.value}
                         type="button"
                         onClick={() => setCaseData({...caseData, urgency_level: option.value})}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition ${
+                        className={`flex-1 px-2 py-2 text-xs sm:text-sm rounded-lg border transition ${
                           caseData.urgency_level === option.value
                             ? `bg-${option.color}-50 border-${option.color}-400 text-${option.color}-700`
                             : 'border-gray-300 text-gray-600 hover:border-gray-400'
@@ -351,7 +382,7 @@ const PostCase = () => {
                   name="county"
                   value={caseData.county}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                 >
                   <option value="">Select County</option>
                   {counties.map(county => (
@@ -369,7 +400,7 @@ const PostCase = () => {
                   name="city"
                   value={caseData.city}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   placeholder="e.g., Nairobi CBD"
                 />
               </div>
@@ -382,7 +413,7 @@ const PostCase = () => {
                   name="is_remote"
                   checked={caseData.is_remote}
                   onChange={handleChange}
-                  className="w-4 h-4 text-[#d47a1a] rounded border-gray-300"
+                  className="w-4 h-4 text-[#d47a1a] rounded border-gray-300 focus:ring-[#e89432]"
                 />
                 <span className="text-sm text-gray-700">Remote consultation available</span>
               </label>
@@ -393,7 +424,7 @@ const PostCase = () => {
           <div className="bg-white rounded-xl shadow-sm p-6">
             <h2 className="text-lg font-semibold text-[#081c2b] mb-4 flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-[#d47a1a]" />
-              Budget
+              Budget <span className="text-red-500 text-sm">*</span>
             </h2>
             
             <div className="grid md:grid-cols-3 gap-4">
@@ -405,44 +436,51 @@ const PostCase = () => {
                   name="budget_type"
                   value={caseData.budget_type}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                 >
                   <option value="fixed">Fixed Fee</option>
                   <option value="hourly">Hourly Rate</option>
-                  <option value="range">Range</option>
+                  <option value="negotiable">Negotiable</option>
                 </select>
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Minimum (KES)
+                  Minimum (KES) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
                   name="budget_min"
                   value={caseData.budget_min}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   placeholder="5000"
+                  min="0"
+                  step="100"
                   required
                 />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Maximum (KES)
+                  Maximum (KES) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
                   name="budget_max"
                   value={caseData.budget_max}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   placeholder="20000"
+                  min="0"
+                  step="100"
                   required
                 />
               </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Enter the budget range in Kenyan Shillings (KES)
+            </p>
           </div>
 
           {/* Lawyer Preferences - Advanced */}
@@ -456,7 +494,11 @@ const PostCase = () => {
                 <Users className="w-5 h-5 text-[#d47a1a]" />
                 Lawyer Preferences (Optional)
               </h2>
-              {showAdvanced ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              {showAdvanced ? (
+                <ChevronUp className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              )}
             </button>
             
             {showAdvanced && (
@@ -470,7 +512,7 @@ const PostCase = () => {
                       name="preferred_lawyer_gender"
                       value={caseData.preferred_lawyer_gender}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                     >
                       {genderOptions.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -486,7 +528,7 @@ const PostCase = () => {
                       name="preferred_experience_level"
                       value={caseData.preferred_experience_level}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                     >
                       {experienceLevels.map(level => (
                         <option key={level.value} value={level.value}>{level.label}</option>
@@ -497,14 +539,14 @@ const PostCase = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Preferred Location (Optional)
+                    Preferred Location
                   </label>
                   <input
                     type="text"
                     name="preferred_location"
                     value={caseData.preferred_location}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                     placeholder="e.g., Nairobi, Mombasa, or leave blank for any"
                   />
                 </div>
@@ -517,7 +559,7 @@ const PostCase = () => {
                     name="case_stage"
                     value={caseData.case_stage}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent outline-none"
                   >
                     {caseStages.map(stage => (
                       <option key={stage} value={stage}>{stage}</option>
@@ -525,14 +567,14 @@ const PostCase = () => {
                   </select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 pt-2">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
                       name="court_case_exists"
                       checked={caseData.court_case_exists}
                       onChange={handleChange}
-                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300"
+                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300 focus:ring-[#e89432]"
                     />
                     <span className="text-sm text-gray-700">Court case already filed</span>
                   </label>
@@ -543,7 +585,7 @@ const PostCase = () => {
                       name="is_public"
                       checked={caseData.is_public}
                       onChange={handleChange}
-                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300"
+                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300 focus:ring-[#e89432]"
                     />
                     <span className="text-sm text-gray-700">Make case publicly visible</span>
                   </label>
@@ -554,7 +596,7 @@ const PostCase = () => {
                       name="allow_direct_lawyer_invites"
                       checked={caseData.allow_direct_lawyer_invites}
                       onChange={handleChange}
-                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300"
+                      className="w-4 h-4 text-[#d47a1a] rounded border-gray-300 focus:ring-[#e89432]"
                     />
                     <span className="text-sm text-gray-700">Allow lawyers to invite themselves to this case</span>
                   </label>
@@ -567,7 +609,7 @@ const PostCase = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#d47a1a] text-white py-3 rounded-lg font-semibold hover:bg-[#b86212] transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-[#d47a1a] text-white py-3 rounded-lg font-semibold hover:bg-[#b86212] transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <Send className="w-4 h-4" />
             {loading ? 'Posting Case...' : 'Post Case'}

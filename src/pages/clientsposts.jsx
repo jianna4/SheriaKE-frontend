@@ -1,16 +1,15 @@
 // src/pages/ClientCases.jsx
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   FileText, Plus, Clock, CheckCircle, 
   AlertCircle, Eye, Edit2, Trash2, 
   MessageCircle, DollarSign, MapPin, Users
 } from 'lucide-react';
-import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
 
 const ClientCases = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
@@ -18,10 +17,6 @@ const ClientCases = () => {
   const [selectedCase, setSelectedCase] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    fetchMyCases();
-  }, []);
 
   const fetchMyCases = async () => {
     try {
@@ -47,12 +42,17 @@ const ClientCases = () => {
     }
   };
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchMyCases();
+  }, []);
+
   const getFilteredCases = () => {
     switch (activeTab) {
       case 'open':
         return cases.filter(c => c.status === 'open');
-      case 'pending':
-        return cases.filter(c => c.status === 'pending');
+      case 'in_review':
+        return cases.filter(c => c.status === 'in_review');
       case 'assigned':
         return cases.filter(c => c.status === 'assigned');
       case 'closed':
@@ -65,8 +65,8 @@ const ClientCases = () => {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'open':
-        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Open - Accepting Applications' };
-      case 'pending':
+        return { color: 'bg-green-100 text-green-700', icon: CheckCircle, label: 'Open - Accepting Bids' };
+      case 'in_review':
         return { color: 'bg-yellow-100 text-yellow-700', icon: Clock, label: 'Pending Review' };
       case 'assigned':
         return { color: 'bg-blue-100 text-blue-700', icon: Users, label: 'Assigned to Lawyer' };
@@ -104,9 +104,8 @@ const ClientCases = () => {
     navigate(`/client/cases/${caseItem.id}/edit`);
   };
 
-  const getApplicationCount = (caseId) => {
-    // This would come from your API
-    return caseItem.applications_count || 0;
+  const getBidCount = (caseItem) => {
+    return caseItem.bids_count || caseItem.applications_count || 0;
   };
 
   const filteredCases = getFilteredCases();
@@ -153,7 +152,7 @@ const ClientCases = () => {
             {[
               { id: 'all', label: 'All Cases', count: cases.length },
               { id: 'open', label: 'Open', count: cases.filter(c => c.status === 'open').length },
-              { id: 'pending', label: 'Pending', count: cases.filter(c => c.status === 'pending').length },
+              { id: 'in_review', label: 'In Review', count: cases.filter(c => c.status === 'in_review').length },
               { id: 'assigned', label: 'Assigned', count: cases.filter(c => c.status === 'assigned').length },
               { id: 'closed', label: 'Closed', count: cases.filter(c => c.status === 'closed').length },
             ].map((tab) => (
@@ -249,7 +248,7 @@ const ClientCases = () => {
                         )}
                         <div className="flex items-center gap-1 text-gray-500">
                           <MessageCircle className="w-4 h-4" />
-                          <span>{caseItem.applications_count || 0} applications</span>
+                          <span>{getBidCount(caseItem)} bids</span>
                         </div>
                       </div>
                     </div>
@@ -283,7 +282,7 @@ const ClientCases = () => {
                         </>
                       )}
                       
-                      {caseItem.status === 'assigned' && caseItem.assigned_lawyer && (
+                      {caseItem.status === 'assigned' && caseItem.accepted_bid?.escrow_payment?.status === 'funded' && (
                         <Link
                           to={`/messages?case=${caseItem.id}`}
                           className="flex items-center justify-center gap-2 px-4 py-2 bg-[#d47a1a] text-white rounded-lg font-semibold hover:bg-[#b86212] transition"
@@ -316,7 +315,7 @@ const ClientCases = () => {
               Are you sure you want to delete "<span className="font-semibold">{selectedCase.title}</span>"?
             </p>
             <p className="text-sm text-gray-500 mb-6">
-              This action cannot be undone. All applications for this case will also be removed.
+              This action cannot be undone. All bids for this case will also be removed.
             </p>
             
             <div className="flex gap-3">

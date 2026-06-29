@@ -1,23 +1,25 @@
-// src/pages/ApplyToCase.jsx
-import React, { useState, useEffect } from 'react';
+// src/pages/BidForCase.jsx
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
-  Briefcase, DollarSign, Clock, Calendar, 
+  Briefcase, DollarSign, Clock,
   MapPin, User, Send, AlertCircle, 
-  CheckCircle, ArrowLeft, FileText, Award
+  CheckCircle, ArrowLeft, Award
 } from 'lucide-react';
 import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
 
 const ApplyToCase = () => {
-  const { id } = useParams();  // ← CHANGE: use "id" instead of "caseId"
+  const { id } = useParams();
+  const hasValidCaseId = Boolean(id && id !== 'undefined');
   const { user } = useAuth();
   const navigate = useNavigate();
   
   const [caseData, setCaseData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [existingBid, setExistingBid] = useState(null);
+  const [loading, setLoading] = useState(hasValidCaseId);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(hasValidCaseId ? '' : 'Invalid case ID');
   const [success, setSuccess] = useState(false);
   
   const [application, setApplication] = useState({
@@ -26,32 +28,32 @@ const ApplyToCase = () => {
     estimated_duration: '',
   });
 
-  useEffect(() => {
-    // Log to debug
-    console.log('Case ID from URL:', id);
-    
-    if (!id || id === 'undefined') {
-      setError('Invalid case ID');
-      setLoading(false);
-      return;
-    }
-    
-    fetchCaseDetails();
-  }, [id]);
-
   const fetchCaseDetails = async () => {
     try {
-      console.log(`Fetching case: /marketplace/cases/${id}/`);
-      const response = await api.get(`/marketplace/cases/${id}/`);
-      console.log('Case response:', response.data);
+      const [caseResponse, bidResponse] = await Promise.all([
+        api.get(`/marketplace/cases/${id}/`),
+        api.get(`/marketplace/applications/?case=${id}`),
+      ]);
       
-      let caseData = response.data?.results?.[0] || response.data;
+      let caseData = caseResponse.data?.results?.[0] || caseResponse.data;
       
       if (!caseData || !caseData.id) {
         throw new Error('Case not found');
       }
       
       setCaseData(caseData);
+
+      const bids = bidResponse.data?.results || bidResponse.data || [];
+      const myBid = bids.find((bid) => bid.case === parseInt(id, 10));
+      if (myBid) {
+        setExistingBid(myBid);
+        setApplication({
+          message: myBid.message || '',
+          proposed_fee: myBid.proposed_fee ? parseFloat(myBid.proposed_fee).toString() : '',
+          estimated_duration: myBid.estimated_duration || '',
+        });
+        return;
+      }
       
       // Pre-fill proposed fee based on case budget range
       if (caseData.budget_min && caseData.budget_max) {
@@ -62,15 +64,28 @@ const ApplyToCase = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching case:', error);
+      console.error('Error loading bid form:', error);
       setError('Failed to load case details');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (hasValidCaseId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchCaseDetails();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasValidCaseId, id]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (existingBid && existingBid.status !== 'pending') {
+      setError('Only pending bids can be edited.');
+      return;
+    }
     
     // Validation
     if (!application.message.trim()) {
@@ -87,14 +102,21 @@ const ApplyToCase = () => {
     setError('');
 
     try {
-      const response = await api.post('/marketplace/applications/', {
+      const payload = {
         case: parseInt(id),
         message: application.message,
         proposed_fee: parseFloat(application.proposed_fee),
         estimated_duration: application.estimated_duration || null,
-      });
+      };
+      const response = existingBid?.status === 'pending'
+        ? await api.patch(`/marketplace/applications/${existingBid.id}/`, {
+            message: payload.message,
+            proposed_fee: payload.proposed_fee,
+            estimated_duration: payload.estimated_duration,
+          })
+        : await api.post('/marketplace/applications/', payload);
       
-      console.log('Application submitted:', response.data);
+      console.log('Bid saved:', response.data);
       setSuccess(true);
       
       // Redirect after 2 seconds
@@ -103,10 +125,10 @@ const ApplyToCase = () => {
       }, 2000);
       
     } catch (error) {
-      console.error('Error submitting application:', error);
+      console.error('Error submitting bid:', error);
       const errorMsg = error.response?.data?.detail || 
                        error.response?.data?.message || 
-                       'Failed to submit application. Please try again.';
+                       'Failed to submit bid. Please try again.';
       setError(errorMsg);
     } finally {
       setSubmitting(false);
@@ -141,18 +163,20 @@ const ApplyToCase = () => {
       <div className="min-h-screen bg-gray-50 pt-20 flex items-center justify-center">
         <div className="bg-white rounded-xl shadow-sm p-8 max-w-md text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-[#081c2b] mb-2">Application Submitted!</h2>
+          <h2 className="text-2xl font-bold text-[#081c2b] mb-2">Bid Saved!</h2>
           <p className="text-gray-600 mb-4">
-            Your application has been sent to the client. You'll be notified when they respond.
+            Your proposal has been sent to the client. You'll be notified when they respond.
           </p>
           <p className="text-sm text-gray-500 mb-6">
-            Redirecting to your applications...
+            Redirecting to your bids...
           </p>
           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#d47a1a] mx-auto"></div>
         </div>
       </div>
     );
   }
+
+  const isBidEditable = !existingBid || existingBid.status === 'pending';
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -171,9 +195,11 @@ const ApplyToCase = () => {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="bg-gradient-to-r from-[#1e4a6e] to-[#153a56] p-6 text-white">
-                <h1 className="text-2xl font-bold">Apply to Case</h1>
+                <h1 className="text-2xl font-bold">
+                  {existingBid ? 'View Bid' : 'Place Bid'}
+                </h1>
                 <p className="text-gray-300 mt-1">
-                  Submit your proposal to represent the client
+                  {isBidEditable ? 'Submit your proposal to represent the client' : 'This bid can no longer be edited'}
                 </p>
               </div>
 
@@ -189,18 +215,19 @@ const ApplyToCase = () => {
                 {/* Cover Letter / Message */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Cover Letter / Message <span className="text-red-500">*</span>
+                    Proposal Message <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={6}
                     value={application.message}
                     onChange={(e) => setApplication({...application, message: e.target.value})}
+                    disabled={!isBidEditable}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
                     placeholder={`Dear client,
 
 I have reviewed your case and believe I can help. Here's why I'm a good fit:
 
-- My experience in ${caseData?.practice_area_name || 'this area'} 
+- My experience in ${caseData?.practice_area_detail?.name || 'this area'} 
 - I have successfully handled similar cases
 - I offer competitive rates and flexible scheduling
 
@@ -223,6 +250,7 @@ I look forward to discussing how I can assist you.`}
                       type="number"
                       value={application.proposed_fee}
                       onChange={(e) => setApplication({...application, proposed_fee: e.target.value})}
+                      disabled={!isBidEditable}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
                       placeholder="e.g., 15000"
                       required
@@ -246,6 +274,7 @@ I look forward to discussing how I can assist you.`}
                       type="text"
                       value={application.estimated_duration}
                       onChange={(e) => setApplication({...application, estimated_duration: e.target.value})}
+                      disabled={!isBidEditable}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#e89432] focus:border-transparent"
                       placeholder="e.g., 2 weeks, 1 month, 5 business days"
                     />
@@ -255,11 +284,11 @@ I look forward to discussing how I can assist you.`}
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !isBidEditable}
                   className="w-full bg-[#d47a1a] text-white py-3 rounded-lg font-semibold hover:bg-[#b86212] transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Send className="w-4 h-4" />
-                  {submitting ? 'Submitting Application...' : 'Submit Application'}
+                  {submitting ? 'Saving Bid...' : existingBid?.status === 'pending' ? 'Update Bid' : existingBid ? 'Bid Locked' : 'Submit Bid'}
                 </button>
               </form>
             </div>
@@ -279,10 +308,10 @@ I look forward to discussing how I can assist you.`}
                   <p className="font-semibold text-[#081c2b]">{caseData?.title}</p>
                 </div>
                 
-                {caseData?.practice_area_name && (
+                {caseData?.practice_area_detail?.name && (
                   <div>
                     <p className="text-xs text-gray-500">Practice Area</p>
-                    <p className="text-sm">{caseData.practice_area_name}</p>
+                    <p className="text-sm">{caseData.practice_area_detail.name}</p>
                   </div>
                 )}
                 
@@ -345,7 +374,7 @@ I look forward to discussing how I can assist you.`}
               
               <div className="mt-4 pt-3 border-t border-gray-100">
                 <p className="text-xs text-gray-500">
-                  The client will see this information when reviewing your application
+                  The client will see this information when reviewing your bid
                 </p>
               </div>
             </div>
@@ -354,10 +383,10 @@ I look forward to discussing how I can assist you.`}
             <div className="bg-[#fef8ee] border border-[#e89432] rounded-xl p-4">
               <h4 className="font-semibold text-[#081c2b] mb-2 flex items-center gap-2">
                 <Award className="w-4 h-4 text-[#d47a1a]" />
-                Application Tips
+                Bid Tips
               </h4>
               <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Personalize your message to the specific case</li>
+                <li>• Personalize your proposal to the specific case</li>
                 <li>• Highlight relevant experience and successes</li>
                 <li>• Propose a fair fee within the client's budget range</li>
                 <li>• Be clear about your availability and timeline</li>
