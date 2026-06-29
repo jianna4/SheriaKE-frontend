@@ -103,6 +103,7 @@ const Header = () => {
         { name: 'Find a Lawyer', href: '/lawyers' },
         { name: 'My Cases', href: '/client/cases' },
         { name: 'Post Case', href: '/client/post-case' },
+        { name: 'Messages', href: '/messages' },
       ];
     }
 
@@ -112,6 +113,7 @@ const Header = () => {
         { name: 'Find Cases', href: '/cases' },
         { name: 'My Applications', href: '/lawyer/applications' },
         { name: 'My Profile', href: '/lawyer/profile' },
+        { name: 'Messages', href: '/messages' },
       ];
     }
 
@@ -264,6 +266,14 @@ const Header = () => {
                               <MessageCircle className="w-4 h-4" />
                               Post a Case
                             </Link>
+                            <Link
+                           to="/messages"
+                                className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
+                               onClick={() => setIsProfileOpen(false)}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Messages
+                            </Link>
                           </>
                         )}
 
@@ -287,11 +297,19 @@ const Header = () => {
                             </Link>
                             <Link
                               to="/lawyer/applications"
-                              className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
+                               className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
                               onClick={() => setIsProfileOpen(false)}
                             >
                               <FileText className="w-4 h-4" />
                               Browse Cases
+                            </Link>
+                            <Link
+                               to="/messages"
+                                className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-[#1e4a6e] hover:text-[#f4ab5b] transition-colors"
+                               onClick={() => setIsProfileOpen(false)}
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                                   Messages
                             </Link>
                           </>
                         )}

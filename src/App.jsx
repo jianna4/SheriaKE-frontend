@@ -27,7 +27,8 @@ import MyLawyerProfile from './pages/lawyerprolife'
 import PublicLawyerProfile from './pages/lawyerprofileforclient'
 import LawyerApplications from './pages/lapplications'
 import ApplyToCase from './pages/lapply'
-
+import MessagesInbox from './pages/messages/MessagesInbox'
+import ConversationDetail from './pages/messages/ConversationDetail'
 function App() {
   return (
     <AuthProvider>
@@ -143,6 +144,22 @@ function App() {
                   element={
                     <ProtectedRoute allowedRoles={['client', 'lawyer']}>
                       <AllCases />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/messages" 
+                  element={
+                    <ProtectedRoute allowedRoles={['client', 'lawyer']}>
+                      <MessagesInbox />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/messages/:id" 
+                  element={
+                    <ProtectedRoute allowedRoles={['client', 'lawyer']}>
+                      <ConversationDetail />
                     </ProtectedRoute>
                   } 
                 />

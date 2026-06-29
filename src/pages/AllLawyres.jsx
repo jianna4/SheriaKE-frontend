@@ -1,15 +1,17 @@
 // src/pages/FindLawyers.jsx
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, Filter, MapPin, Star, Briefcase, 
-  DollarSign, ChevronDown, Award, MessageCircle
+  DollarSign, ChevronDown, Award, MessageCircle,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
 
 const FindLawyers = () => {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -20,6 +22,8 @@ const FindLawyers = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [practiceAreas, setPracticeAreas] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [messagingError, setMessagingError] = useState('');
+  const [messagingLoading, setMessagingLoading] = useState({});
 
   useEffect(() => {
     fetchLawyers();
@@ -31,7 +35,6 @@ const FindLawyers = () => {
       const response = await api.get('/marketplace/lawyers/');
       console.log('Lawyers API response:', response.data);
       
-      // ✅ FIX: Extract the results array from paginated response
       let lawyersData = [];
       if (response.data && Array.isArray(response.data.results)) {
         lawyersData = response.data.results;
@@ -41,9 +44,14 @@ const FindLawyers = () => {
         lawyersData = [];
       }
       
+      // Log the first lawyer to see the structure
+      if (lawyersData.length > 0) {
+        console.log('First lawyer structure:', lawyersData[0]);
+        console.log('User ID:', lawyersData[0]?.user?.id);
+      }
+      
       setLawyers(lawyersData);
       
-      // Extract unique locations for filter
       const uniqueLocations = [...new Set(lawyersData.map(l => l.location).filter(Boolean))];
       setLocations(uniqueLocations);
     } catch (error) {
@@ -57,7 +65,6 @@ const FindLawyers = () => {
   const fetchPracticeAreas = async () => {
     try {
       const response = await api.get('/marketplace/practice-areas/');
-      // Practice areas might also be paginated
       let areasData = [];
       if (response.data && Array.isArray(response.data.results)) {
         areasData = response.data.results;
@@ -69,6 +76,114 @@ const FindLawyers = () => {
       setPracticeAreas(areasData);
     } catch (error) {
       console.error('Error fetching practice areas:', error);
+    }
+  };
+
+  // Handle starting a conversation with a lawyer
+  const handleMessageLawyer = async (lawyerUserId, lawyerName, lawyerProfileId) => {
+    console.log('=== handleMessageLawyer called ===');
+    console.log('lawyerUserId:', lawyerUserId);
+    console.log('lawyerName:', lawyerName);
+    console.log('lawyerProfileId:', lawyerProfileId);
+    
+    // Check authentication
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: '/lawyers' } });
+      return;
+    }
+
+    // Check role
+    if (user?.role !== 'client') {
+      alert('Only clients can message lawyers');
+      return;
+    }
+
+    // Try both user ID and profile ID
+    let receiverId = lawyerUserId || lawyerProfileId;
+    
+    if (!receiverId) {
+      setMessagingError('Unable to identify the lawyer. Please try again.');
+      setTimeout(() => setMessagingError(''), 5000);
+      return;
+    }
+
+    // Set loading state for this specific lawyer
+    setMessagingLoading(prev => ({ ...prev, [receiverId]: true }));
+    setMessagingError('');
+
+    try {
+      console.log('Sending receiver ID:', receiverId);
+      
+      // Try using lawyer_profile first (if we have it)
+      const payload = lawyerProfileId 
+        ? { lawyer_profile: Number(lawyerProfileId) }
+        : { receiver: Number(receiverId) };
+      
+      console.log('Payload:', payload);
+      
+      const response = await api.post('/messaging/conversations/', payload);
+
+      console.log('Conversation created:', response.data);
+      
+      // Navigate to the conversation
+      navigate(`/messages/${response.data.id}`);
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      console.error('Response data:', error.response?.data);
+      console.error('Status:', error.response?.status);
+      
+      // If first attempt failed with receiver, try lawyer_profile
+      if (error.response?.status === 400 && lawyerProfileId && !error.config.data.includes('lawyer_profile')) {
+        console.log('Retrying with lawyer_profile...');
+        try {
+          const retryResponse = await api.post('/messaging/conversations/', {
+            lawyer_profile: Number(lawyerProfileId)
+          });
+          console.log('Retry successful:', retryResponse.data);
+          navigate(`/messages/${retryResponse.data.id}`);
+          return;
+        } catch (retryError) {
+          console.error('Retry also failed:', retryError);
+        }
+      }
+      
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        const errorData = error.response?.data;
+        let errorMsg = 'Cannot start conversation. Please try again.';
+        
+        if (typeof errorData === 'object') {
+          if (errorData.detail) {
+            errorMsg = errorData.detail;
+          } else if (errorData.non_field_errors) {
+            errorMsg = errorData.non_field_errors.join(' ');
+          } else if (errorData.receiver) {
+            errorMsg = `Receiver error: ${Array.isArray(errorData.receiver) ? errorData.receiver.join(' ') : errorData.receiver}`;
+          }
+        } else if (typeof errorData === 'string') {
+          errorMsg = errorData;
+        }
+        
+        if (errorMsg.includes('Lawyers cannot start') || errorMsg.includes('role combination')) {
+          setMessagingError('Only clients can initiate conversations with lawyers.');
+        } else if (errorMsg.includes('already exists') || errorMsg.includes('unique')) {
+          setMessagingError('You already have a conversation with this lawyer. Check your messages.');
+        } else {
+          setMessagingError(errorMsg);
+        }
+      } else if (error.response?.status === 403) {
+        setMessagingError('You do not have permission to message this lawyer.');
+      } else if (error.response?.status === 404) {
+        setMessagingError('Lawyer not found. Please try again.');
+      } else {
+        setMessagingError('Failed to start conversation. Please try again.');
+      }
+
+      setTimeout(() => {
+        setMessagingError('');
+      }, 5000);
+    } finally {
+      setMessagingLoading(prev => ({ ...prev, [receiverId]: false }));
     }
   };
 
@@ -104,12 +219,17 @@ const FindLawyers = () => {
 
   const renderStars = (rating) => {
     const fullStars = Math.floor(rating || 0);
+    const hasHalfStar = (rating || 0) % 1 >= 0.5;
     return (
       <div className="flex items-center gap-0.5">
         {[...Array(5)].map((_, i) => (
           <Star
             key={i}
-            className={`w-4 h-4 ${i < fullStars ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+            className={`w-4 h-4 ${
+              i < fullStars ? 'text-yellow-400 fill-current' :
+              i === fullStars && hasHalfStar ? 'text-yellow-400 half-fill' :
+              'text-gray-300'
+            }`}
           />
         ))}
       </div>
@@ -134,6 +254,14 @@ const FindLawyers = () => {
             Browse through our directory of experienced lawyers and legal experts
           </p>
         </div>
+
+        {/* Error Message */}
+        {messagingError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{messagingError}</span>
+          </div>
+        )}
 
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-8">
@@ -246,125 +374,181 @@ const FindLawyers = () => {
           </div>
         ) : (
           <div className="grid gap-6">
-            {filteredLawyers.map((lawyer) => (
-              <div key={lawyer.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
-                <div className="flex flex-col lg:flex-row">
-                  {/* Left Section - Profile */}
-                  <div className="lg:w-1/3 p-6 bg-gradient-to-br from-[#1e4a6e] to-[#153a56] text-white">
-                    <div className="text-center lg:text-left">
-                      <div className="w-20 h-20 bg-[#d47a1a] rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-4">
-                        <span className="text-2xl font-bold text-white">
-                          {lawyer.user?.first_name?.[0]}{lawyer.user?.last_name?.[0]}
-                        </span>
-                      </div>
-                      
-                      <h2 className="text-xl font-bold mb-1">
-                        {lawyer.user?.first_name} {lawyer.user?.last_name}
-                      </h2>
-                      
-                      <p className="text-[#f4ab5b] text-sm mb-3">
-                        {lawyer.headline || 'Legal Professional'}
-                      </p>
-                      
-                      <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
-                        {renderStars(lawyer.average_rating)}
-                        <span className="text-sm">
-                          ({lawyer.total_reviews || 0} reviews)
-                        </span>
-                      </div>
-                      
-                      {lawyer.location && (
-                        <div className="flex items-center justify-center lg:justify-start gap-2 text-sm mb-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>{lawyer.location}</span>
+            {filteredLawyers.map((lawyer) => {
+              const lawyerUserId = lawyer.user?.id;
+              const lawyerProfileId = lawyer.id;
+              const isMessaging = messagingLoading[lawyerUserId] || messagingLoading[lawyerProfileId];
+              
+              // Debug log for each lawyer
+              console.log(`Lawyer ${lawyer.user?.first_name}: user.id=${lawyerUserId}, profile.id=${lawyerProfileId}`);
+              
+              return (
+                <div key={lawyer.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition overflow-hidden">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Left Section - Profile */}
+                    <div className="lg:w-1/3 p-6 bg-gradient-to-br from-[#1e4a6e] to-[#153a56] text-white">
+                      <div className="text-center lg:text-left">
+                        <div className="w-20 h-20 bg-[#d47a1a] rounded-full flex items-center justify-center mx-auto lg:mx-0 mb-4">
+                          <span className="text-2xl font-bold text-white">
+                            {lawyer.user?.first_name?.[0]}{lawyer.user?.last_name?.[0]}
+                          </span>
                         </div>
-                      )}
-                      
-                      {lawyer.years_of_experience && (
-                        <div className="flex items-center justify-center lg:justify-start gap-2 text-sm">
-                          <Award className="w-4 h-4" />
-                          <span>{lawyer.years_of_experience} years experience</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right Section - Details */}
-                  <div className="flex-1 p-6">
-                    {lawyer.practice_areas && lawyer.practice_areas.length > 0 && (
-                      <div className="mb-4">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-2">Practice Areas</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {lawyer.practice_areas.map(area => (
-                            <span key={area.id} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
-                              {area.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {lawyer.bio && (
-                      <div className="mb-4">
-                        <p className="text-gray-600 text-sm line-clamp-2">
-                          {lawyer.bio}
+                        
+                        <h2 className="text-xl font-bold mb-1">
+                          {lawyer.user?.first_name} {lawyer.user?.last_name}
+                        </h2>
+                        
+                        <p className="text-[#f4ab5b] text-sm mb-3">
+                          {lawyer.headline || 'Legal Professional'}
                         </p>
+                        
+                        <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
+                          {renderStars(lawyer.average_rating)}
+                          <span className="text-sm">
+                            ({lawyer.reviews_count || 0} reviews)
+                          </span>
+                        </div>
+                        
+                        {lawyer.location && (
+                          <div className="flex items-center justify-center lg:justify-start gap-2 text-sm mb-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>{lawyer.location}</span>
+                          </div>
+                        )}
+                        
+                        {lawyer.years_of_experience && (
+                          <div className="flex items-center justify-center lg:justify-start gap-2 text-sm">
+                            <Award className="w-4 h-4" />
+                            <span>{lawyer.years_of_experience} years experience</span>
+                          </div>
+                        )}
+
+                        {lawyer.verification_status === 'verified' && (
+                          <div className="mt-3 flex items-center justify-center lg:justify-start gap-2 text-sm bg-green-500/20 px-3 py-1 rounded-full">
+                            <span className="text-green-400">✓</span>
+                            <span className="text-sm">LSK Verified</span>
+                          </div>
+                        )}
                       </div>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-4 mb-4">
-                      {lawyer.consultation_fee && (
-                        <div>
-                          <p className="text-xs text-gray-500">Consultation Fee</p>
-                          <p className="text-lg font-bold text-[#d47a1a]">
-                            KES {lawyer.consultation_fee.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
-                      {lawyer.hourly_rate && (
-                        <div>
-                          <p className="text-xs text-gray-500">Hourly Rate</p>
-                          <p className="text-lg font-bold text-[#d47a1a]">
-                            KES {lawyer.hourly_rate.toLocaleString()}
-                          </p>
-                        </div>
-                      )}
                     </div>
-                    
-                    <div className="flex flex-wrap gap-3">
-                      <Link
-                        to={`/lawyers/${lawyer.id}`}
-                        className="px-4 py-2 bg-[#d47a1a] text-white rounded-lg font-semibold hover:bg-[#b86212] transition"
-                      >
-                        View Profile
-                      </Link>
-                      
-                      {isAuthenticated && user?.role === 'client' && (
-                        <Link
-                          to={`/messages?lawyer=${lawyer.id}`}
-                          className="px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg font-semibold hover:bg-[#d47a1a] hover:text-white transition"
-                        >
-                          <MessageCircle className="w-4 h-4 inline mr-1" />
-                          Message to consult
-                        </Link>
+
+                    {/* Right Section - Details */}
+                    <div className="flex-1 p-6">
+                      {lawyer.practice_areas && lawyer.practice_areas.length > 0 && (
+                        <div className="mb-4">
+                          <h3 className="text-sm font-semibold text-gray-700 mb-2">Practice Areas</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {lawyer.practice_areas.map(area => (
+                              <span key={area.id} className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
+                                {area.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       )}
                       
-                      {!isAuthenticated && (
-                        <Link
-                          to="/login"
-                          className="px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg font-semibold hover:bg-[#d47a1a] hover:text-white transition"
-                        >
-                          Login to Contact
-                        </Link>
+                      {lawyer.bio && (
+                        <div className="mb-4">
+                          <p className="text-gray-600 text-sm line-clamp-2">
+                            {lawyer.bio}
+                          </p>
+                        </div>
                       )}
+                      
+                      <div className="flex flex-wrap gap-4 mb-4">
+                        {lawyer.consultation_fee && (
+                          <div>
+                            <p className="text-xs text-gray-500">Consultation Fee</p>
+                            <p className="text-lg font-bold text-[#d47a1a]">
+                              KES {lawyer.consultation_fee.toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                        {lawyer.hourly_rate && (
+                          <div>
+                            <p className="text-xs text-gray-500">Hourly Rate</p>
+                            <p className="text-lg font-bold text-[#d47a1a]">
+                              KES {lawyer.hourly_rate.toLocaleString()}
+                            </p>
+                          </div>
+                        )}
+                        {lawyer.success_rate > 0 && (
+                          <div>
+                            <p className="text-xs text-gray-500">Success Rate</p>
+                            <p className="text-lg font-bold text-green-600">
+                              {lawyer.success_rate}%
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-3">
+                        <Link
+                          to={`/lawyers/${lawyer.id}`}
+                          className="px-4 py-2 bg-[#d47a1a] text-white rounded-lg font-semibold hover:bg-[#b86212] transition"
+                        >
+                          View Profile
+                        </Link>
+                        
+                        {/* Message Button - Only for authenticated clients */}
+                        {isAuthenticated && user?.role === 'client' ? (
+                          <button
+                            onClick={() => handleMessageLawyer(lawyerUserId, lawyer.user?.first_name, lawyerProfileId)}
+                            disabled={isMessaging}
+                            className="px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg font-semibold hover:bg-[#d47a1a] hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          >
+                            {isMessaging ? (
+                              <>
+                                <div className="animate-spin h-4 w-4 border-2 border-[#d47a1a] border-t-transparent rounded-full" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>
+                                <MessageCircle className="w-4 h-4" />
+                                Message to Consult
+                              </>
+                            )}
+                          </button>
+                        ) : !isAuthenticated ? (
+                          <Link
+                            to="/login"
+                            state={{ from: '/lawyers' }}
+                            className="px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg font-semibold hover:bg-[#d47a1a] hover:text-white transition flex items-center gap-2"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            Login to Message
+                          </Link>
+                        ) : user?.role === 'lawyer' && (
+                          <div className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                            <MessageCircle className="w-4 h-4 inline mr-1" />
+                            Lawyers cannot initiate messages
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Add CSS for half-star */}
+      <style jsx>{`
+        .half-fill {
+          position: relative;
+        }
+        .half-fill::after {
+          content: '★';
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 50%;
+          overflow: hidden;
+          color: #facc15;
+        }
+      `}</style>
     </div>
   );
 };
