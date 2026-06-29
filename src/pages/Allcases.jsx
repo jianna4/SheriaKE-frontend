@@ -1,9 +1,9 @@
 // src/pages/AllCases.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Search, Filter, Briefcase, MapPin, Clock, 
-  DollarSign, ChevronDown, Users, Star 
+  ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../Components/contexts/AuthContext';
 import api from '../Components/auth/Api';
@@ -17,11 +17,6 @@ const AllCases = () => {
   const [priceRange, setPriceRange] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [practiceAreas, setPracticeAreas] = useState([]);
-
-  useEffect(() => {
-    fetchCases();
-    fetchPracticeAreas();
-  }, []);
 
   const fetchCases = async () => {
     try {
@@ -49,17 +44,23 @@ const AllCases = () => {
   const fetchPracticeAreas = async () => {
     try {
       const response = await api.get('/marketplace/practice-areas/');
-      setPracticeAreas(response.data);
+      setPracticeAreas(response.data?.results || response.data || []);
     } catch (error) {
       console.error('Error fetching practice areas:', error);
     }
   };
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchCases();
+    fetchPracticeAreas();
+  }, []);
+
   // Filter cases based on search and filters
   const filteredCases = cases.filter(caseItem => {
     const matchesSearch = caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           caseItem.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesPracticeArea = !selectedPracticeArea || caseItem.practice_area === selectedPracticeArea;
+    const matchesPracticeArea = !selectedPracticeArea || String(caseItem.practice_area) === selectedPracticeArea;
     const matchesPrice = !priceRange || (
       priceRange === '0-5000' ? caseItem.budget_max <= 5000 :
       priceRange === '5000-20000' ? caseItem.budget_min >= 5000 && caseItem.budget_max <= 20000 :
@@ -71,9 +72,10 @@ const AllCases = () => {
   const getStatusBadge = (status) => {
     const badges = {
       'open': 'bg-green-100 text-green-700',
-      'pending': 'bg-yellow-100 text-yellow-700',
+      'in_review': 'bg-yellow-100 text-yellow-700',
       'assigned': 'bg-blue-100 text-blue-700',
-      'completed': 'bg-gray-100 text-gray-700',
+      'closed': 'bg-gray-100 text-gray-700',
+      'cancelled': 'bg-gray-100 text-gray-700',
     };
     return badges[status] || 'bg-gray-100 text-gray-700';
   };
@@ -93,7 +95,7 @@ const AllCases = () => {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-[#081c2b]">Legal Cases</h1>
           <p className="text-gray-600 mt-2">
-            Browse through available legal cases and find the right opportunity
+            Browse available legal cases and place proposals
           </p>
         </div>
 
@@ -203,7 +205,7 @@ const AllCases = () => {
                     <div className="flex flex-wrap gap-4 text-sm">
                       <div className="flex items-center gap-1 text-gray-500">
                         <Briefcase className="w-4 h-4" />
-                        <span>{caseItem.practice_area_name || 'General'}</span>
+                        <span>{caseItem.practice_area_detail?.name || 'General'}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-500">
                         <MapPin className="w-4 h-4" />
@@ -230,7 +232,7 @@ const AllCases = () => {
                         to={`/lawyer/cases/${caseItem.id}/apply`}
                         className="block px-4 py-2 bg-[#d47a1a] text-white rounded-lg text-center font-semibold hover:bg-[#b86212] transition"
                       >
-                        Apply Now
+                        Place Bid
                       </Link>
                     )}
                     
@@ -239,11 +241,11 @@ const AllCases = () => {
                         to="/login"
                         className="block px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg text-center font-semibold hover:bg-[#d47a1a] hover:text-white transition"
                       >
-                        Login to Apply
+                        Login to Bid
                       </Link>
                     )}
                     
-                    {isAuthenticated && user?.role === 'client' && caseItem.client_id === user?.id && (
+                    {isAuthenticated && user?.role === 'client' && caseItem.client === user?.id && (
                       <Link
                         to={`/client/cases/${caseItem.id}`}
                         className="block px-4 py-2 border border-[#d47a1a] text-[#d47a1a] rounded-lg text-center font-semibold hover:bg-[#d47a1a] hover:text-white transition"
@@ -252,7 +254,7 @@ const AllCases = () => {
                       </Link>
                     )}
                     
-                    {isAuthenticated && user?.role === 'client' && caseItem.client_id !== user?.id && (
+                    {isAuthenticated && user?.role === 'client' && caseItem.client !== user?.id && (
                       <Link
                         to={`/cases/${caseItem.id}`}
                         className="block px-4 py-2 text-gray-500 text-center"
