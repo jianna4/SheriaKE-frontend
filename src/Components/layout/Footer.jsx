@@ -14,8 +14,7 @@ return(
             max-sm:w-2 max-sm:h-2
             " />
             Powered by the Kenya Employment Act 2007 (Chapter 226)
-            <span className="mx-1">•</span>
-            Not a substitute for legal advice
+            
           </p>
         </div>
     </footer>

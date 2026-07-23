@@ -30,7 +30,6 @@ const ChatAI = () => {
   // Handle role change
   useEffect(() => {
     if (isAuthenticated && messages.length === 0) {
-      // Create a new session when role changes
       createNewSession(role);
     }
   }, [role, isAuthenticated]);
@@ -55,8 +54,6 @@ const ChatAI = () => {
       createNewSession(role);
     } else {
       clearGuestChat();
-      // Add welcome message for guest
-      // The ChatContext handles this
     }
   };
 
@@ -80,141 +77,561 @@ const ChatAI = () => {
         "What are the penalties for non-compliance?"
       ];
 
+  // Styles
+  const styles = {
+    container: {
+      display: 'flex',
+      height: '100vh',
+      backgroundColor: '#f9fafb',
+      overflow: 'hidden'
+    },
+    mainArea: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      minWidth: 0
+    },
+    header: {
+      backgroundColor: '#ffffff',
+      borderBottom: '1px solid #e5e7eb',
+      padding: '8px 12px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      flexShrink: 0
+    },
+    headerLeft: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      minWidth: 0
+    },
+    menuButton: {
+      padding: '6px 8px',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      flexShrink: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    headerBrand: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      minWidth: 0
+    },
+    brandIcon: {
+      width: '28px',
+      height: '28px',
+      backgroundColor: '#081c2b',
+      borderRadius: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0
+    },
+    brandTitle: {
+      fontSize: '16px',
+      fontWeight: 600,
+      color: '#081c2b',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis'
+    },
+    brandSubtitle: {
+      fontSize: '10px',
+      color: '#6b7280',
+      display: 'none'
+    },
+    headerRight: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      flexShrink: 0
+    },
+    roleToggle: {
+      display: 'flex',
+      backgroundColor: '#f3f4f6',
+      borderRadius: '8px',
+      padding: '2px'
+    },
+    roleButton: (isActive) => ({
+      padding: '4px 8px',
+      borderRadius: '6px',
+      fontSize: '10px',
+      fontWeight: 500,
+      border: 'none',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '2px',
+      backgroundColor: isActive ? '#081c2b' : 'transparent',
+      color: isActive ? '#ffffff' : '#6b7280',
+      transition: 'all 0.2s'
+    }),
+    authStatus: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px'
+    },
+    username: {
+      fontSize: '12px',
+      color: '#6b7280',
+      display: 'none',
+      maxWidth: '60px',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap'
+    },
+    logoutButton: {
+      padding: '6px 8px',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      color: '#6b7280',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    loginButton: {
+      padding: '6px 12px',
+      backgroundColor: '#081c2b',
+      color: '#ffffff',
+      borderRadius: '8px',
+      fontSize: '10px',
+      fontWeight: 500,
+      textDecoration: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      whiteSpace: 'nowrap',
+      border: 'none',
+      cursor: 'pointer'
+    },
+    messagesArea: {
+      flex: 1,
+      overflowY: 'auto',
+      padding: '8px 16px'
+    },
+    emptyState: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100%',
+      textAlign: 'center',
+      padding: '0 16px'
+    },
+    emptyIcon: {
+      width: '64px',
+      height: '64px',
+      backgroundColor: '#081c2b',
+      borderRadius: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: '12px'
+    },
+    emptyTitle: {
+      fontSize: '20px',
+      fontWeight: 700,
+      color: '#081c2b',
+      marginBottom: '8px'
+    },
+    emptySubtitle: {
+      fontSize: '14px',
+      color: '#6b7280',
+      maxWidth: '448px',
+      marginBottom: '16px'
+    },
+    questionsGrid: {
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: '6px',
+      justifyContent: 'center',
+      maxWidth: '672px'
+    },
+    questionButton: {
+      padding: '6px 12px',
+      backgroundColor: '#f3f4f6',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '11px',
+      color: '#374151',
+      cursor: 'pointer',
+      transition: 'background-color 0.2s'
+    },
+    guestNote: {
+      fontSize: '12px',
+      color: '#9ca3af',
+      marginTop: '16px'
+    },
+    messagesList: {
+      maxWidth: '768px',
+      margin: '0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '12px',
+      padding: '0 4px'
+    },
+    messageWrapper: (type) => ({
+      display: 'flex',
+      justifyContent: type === 'user' ? 'flex-end' : 'flex-start'
+    }),
+    messageBubble: (type) => ({
+      maxWidth: '90%',
+      borderRadius: '8px',
+      padding: '8px 12px',
+      backgroundColor: type === 'user' ? '#081c2b' : type === 'system' ? '#f3f4f6' : '#ffffff',
+      color: type === 'user' ? '#ffffff' : type === 'system' ? '#6b7280' : '#1f2937',
+      border: type === 'system' ? 'none' : type === 'user' ? 'none' : '1px solid #e5e7eb',
+      fontStyle: type === 'system' ? 'italic' : 'normal',
+      fontSize: type === 'system' ? '12px' : '14px',
+      wordBreak: 'break-word'
+    }),
+    messageContent: {
+      fontSize: '14px',
+      lineHeight: '1.5'
+    },
+    sources: {
+      marginTop: '8px',
+      paddingTop: '8px',
+      borderTop: '1px solid #e5e7eb'
+    },
+    sourcesText: {
+      fontSize: '10px',
+      color: '#6b7280'
+    },
+    loadingDots: {
+      display: 'flex',
+      justifyContent: 'flex-start'
+    },
+    loadingBubble: {
+      backgroundColor: '#ffffff',
+      border: '1px solid #e5e7eb',
+      borderRadius: '8px',
+      padding: '8px 16px'
+    },
+    dotContainer: {
+      display: 'flex',
+      gap: '4px'
+    },
+    dot: (delay) => ({
+      width: '8px',
+      height: '8px',
+      backgroundColor: '#9ca3af',
+      borderRadius: '50%',
+      animation: 'bounce 1.4s infinite ease-in-out',
+      animationDelay: delay
+    }),
+    inputArea: {
+      backgroundColor: '#ffffff',
+      borderTop: '1px solid #e5e7eb',
+      padding: '8px 12px',
+      flexShrink: 0
+    },
+    inputContainer: {
+      maxWidth: '768px',
+      margin: '0 auto',
+      display: 'flex',
+      gap: '8px'
+    },
+    newChatButton: {
+      padding: '6px 8px',
+      background: 'transparent',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      color: '#6b7280',
+      alignSelf: 'flex-end',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0
+    },
+    textareaWrapper: {
+      flex: 1,
+      position: 'relative',
+      minWidth: 0
+    },
+    textarea: {
+      width: '100%',
+      padding: '8px 12px',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '14px',
+      outline: 'none',
+      resize: 'none',
+      minHeight: '42px',
+      maxHeight: '120px',
+      fontFamily: 'inherit'
+    },
+    sendButton: (disabled) => ({
+      padding: '8px 12px',
+      borderRadius: '8px',
+      border: 'none',
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      backgroundColor: disabled ? '#081c2b' : '#081c2b',
+      color: disabled ? '#9ca3af' : '#ffffff',
+      opacity: disabled ? 0.6 : 1,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      transition: 'opacity 0.2s'
+    }),
+    footer: {
+      maxWidth: '768px',
+      margin: '4px auto 0',
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: '10px',
+      color: '#9ca3af',
+      padding: '0 4px'
+    }
+  };
+
+  // Inject keyframe animation
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+      }
+      
+      @media (min-width: 480px) {
+        .brand-subtitle { display: block !important; }
+        .username-desktop { display: inline !important; }
+        .role-label-full { display: inline !important; }
+        .role-label-short { display: none !important; }
+        .login-label-full { display: inline !important; }
+        .login-label-short { display: none !important; }
+        .header-padding { padding: 12px 16px !important; }
+        .message-bubble { max-width: 80% !important; }
+        .empty-icon-size { width: 80px !important; height: 80px !important; }
+        .empty-icon-svg { width: 32px !important; height: 32px !important; }
+        .empty-title-size { font-size: 24px !important; }
+        .message-text-size { font-size: 15px !important; }
+        .input-padding { padding: 12px 16px !important; }
+        .send-padding { padding: 12px 16px !important; }
+        .footer-text { font-size: 12px !important; }
+        .guest-note-margin { margin-top: 24px !important; }
+        .questions-gap { gap: 8px !important; }
+        .question-text { font-size: 13px !important; }
+        .question-padding { padding: 8px 12px !important; }
+        .messages-padding { padding: 16px !important; }
+        .header-title { font-size: 18px !important; }
+        .header-subtitle { font-size: 12px !important; }
+        .role-text { font-size: 12px !important; }
+        .role-padding { padding: 4px 12px !important; }
+        .login-text { font-size: 12px !important; }
+        .login-padding { padding: 8px 16px !important; }
+        .messages-gap { gap: 16px !important; }
+        .message-padding { padding: 12px 16px !important; }
+        .message-bubble-padding { padding: 8px 16px !important; }
+        .input-gap { gap: 12px !important; }
+        .dot-size { width: 10px !important; height: 10px !important; }
+        .brand-icon-size { width: 32px !important; height: 32px !important; }
+        .brand-icon-svg { width: 18px !important; height: 18px !important; }
+        .menu-button-padding { padding: 8px !important; }
+        .menu-icon-size { width: 24px !important; height: 24px !important; }
+        .send-icon-size { width: 20px !important; height: 20px !important; }
+        .new-chat-icon { width: 20px !important; height: 20px !important; }
+        .input-text-size { font-size: 15px !important; }
+        .input-min-height { min-height: 48px !important; }
+        .role-icon-size { width: 14px !important; height: 14px !important; }
+        .logout-icon-size { width: 20px !important; height: 20px !important; }
+        .auth-gap { gap: 8px !important; }
+        .username-max { max-width: 100px !important; }
+        .username-text { font-size: 14px !important; }
+      }
+      
+      @media (max-width: 479px) {
+        .brand-subtitle { display: none !important; }
+        .username-desktop { display: none !important; }
+        .role-label-full { display: none !important; }
+        .role-label-short { display: inline !important; }
+        .login-label-full { display: none !important; }
+        .login-label-short { display: inline !important; }
+        .header-padding { padding: 8px 12px !important; }
+        .message-bubble { max-width: 90% !important; }
+        .empty-icon-size { width: 64px !important; height: 64px !important; }
+        .empty-icon-svg { width: 28px !important; height: 28px !important; }
+        .empty-title-size { font-size: 20px !important; }
+        .message-text-size { font-size: 14px !important; }
+        .input-padding { padding: 8px 12px !important; }
+        .send-padding { padding: 8px 12px !important; }
+        .footer-text { font-size: 10px !important; }
+        .guest-note-margin { margin-top: 16px !important; }
+        .questions-gap { gap: 6px !important; }
+        .question-text { font-size: 11px !important; }
+        .question-padding { padding: 6px 12px !important; }
+        .messages-padding { padding: 8px !important; }
+        .header-title { font-size: 16px !important; }
+        .header-subtitle { font-size: 10px !important; }
+        .role-text { font-size: 10px !important; }
+        .role-padding { padding: 4px 8px !important; }
+        .login-text { font-size: 10px !important; }
+        .login-padding { padding: 6px 12px !important; }
+        .messages-gap { gap: 12px !important; }
+        .message-padding { padding: 6px 12px !important; }
+        .message-bubble-padding { padding: 8px 12px !important; }
+        .input-gap { gap: 8px !important; }
+        .dot-size { width: 8px !important; height: 8px !important; }
+        .brand-icon-size { width: 28px !important; height: 28px !important; }
+        .brand-icon-svg { width: 16px !important; height: 16px !important; }
+        .menu-button-padding { padding: 6px 8px !important; }
+        .menu-icon-size { width: 20px !important; height: 20px !important; }
+        .send-icon-size { width: 18px !important; height: 18px !important; }
+        .new-chat-icon { width: 18px !important; height: 18px !important; }
+        .input-text-size { font-size: 14px !important; }
+        .input-min-height { min-height: 42px !important; }
+        .role-icon-size { width: 12px !important; height: 12px !important; }
+        .logout-icon-size { width: 16px !important; height: 16px !important; }
+        .auth-gap { gap: 4px !important; }
+        .username-max { max-width: 60px !important; }
+        .username-text { font-size: 12px !important; }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
+  }, []);
+
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div style={styles.container}>
       <ChatSidebar />
 
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full">
+      <div style={styles.mainArea}>
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
+        <header className="header-padding" style={styles.header}>
+          <div style={styles.headerLeft}>
+            <button 
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="menu-button-padding"
+              style={styles.menuButton}
             >
-              <Menu size={24} />
+              <Menu className="menu-icon-size" size={20} />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-navy-700 rounded-lg flex items-center justify-center">
-                <Sparkles size={18} className="text-gold-400" />
+            <div style={styles.headerBrand}>
+              <div className="brand-icon-size" style={styles.brandIcon}>
+                <Sparkles className="brand-icon-svg" size={16} style={{ color: '#c9a84c' }} />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-navy-700">SheriaAI Chat</h1>
-                <p className="text-xs text-gray-500">
+                <h1 className="header-title" style={styles.brandTitle}>SheriaAI Chat</h1>
+                <p className="brand-subtitle header-subtitle" style={styles.brandSubtitle}>
                   {role === 'employee' ? 'Employee Mode' : 'Employer Mode'}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="auth-gap" style={styles.headerRight}>
             {/* Role Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div style={styles.roleToggle}>
               <button
                 onClick={() => handleRoleChange('employee')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
-                  role === 'employee'
-                    ? 'bg-[#081c2b]/95 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                className="role-padding role-text"
+                style={styles.roleButton(role === 'employee')}
               >
-                <User size={14} />
-                Employee
+                <User className="role-icon-size" size={12} />
+                <span className="role-label-full">Employee</span>
+                <span className="role-label-short">Emp</span>
               </button>
               <button
                 onClick={() => handleRoleChange('employer')}
-                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors flex items-center gap-1 ${
-                  role === 'employer'
-                    ? 'bg-[#081c2b]/95 text-white'
-                    : 'text-gray-600 hover:bg-gray-200'
-                }`}
+                className="role-padding role-text"
+                style={styles.roleButton(role === 'employer')}
               >
-                <Briefcase size={14} />
-                Employer
+                <Briefcase className="role-icon-size" size={12} />
+                <span className="role-label-full">Employer</span>
+                <span className="role-label-short">Emp</span>
               </button>
             </div>
 
             {/* Auth Status */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600 hidden sm:inline">
+              <div className="auth-gap" style={styles.authStatus}>
+                <span className="username-desktop username-text username-max" style={styles.username}>
                   {user?.first_name || user?.username}
                 </span>
                 <button
                   onClick={logout}
-                  className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+                  className="logout-icon-size"
+                  style={styles.logoutButton}
                   title="Logout"
                 >
-                  <LogOut size={20} />
+                  <LogOut className="logout-icon-size" size={16} />
                 </button>
               </div>
             ) : (
               <a
                 href="/login"
-                className="px-4 py-2 bg-navy-700 text-white rounded-lg text-sm font-medium hover:bg-navy-800 transition-colors flex items-center gap-2"
+                className="login-padding login-text"
+                style={styles.loginButton}
               >
-                <LogIn size={16} />
-                Sign In
+                <LogIn size={14} />
+                <span className="login-label-full">Sign In</span>
+                <span className="login-label-short">Login</span>
               </a>
             )}
           </div>
         </header>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="messages-padding" style={styles.messagesArea}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-20 h-20 bg-navy-700 rounded-2xl flex items-center justify-center mb-4">
-                <Sparkles size={32} className="text-gold-400" />
+            <div style={styles.emptyState}>
+              <div className="empty-icon-size" style={styles.emptyIcon}>
+                <Sparkles className="empty-icon-svg" size={28} style={{ color: '#c9a84c' }} />
               </div>
-              <h2 className="text-2xl font-bold text-navy-700 mb-2">
+              <h2 className="empty-title-size" style={styles.emptyTitle}>
                 Kenya Employment Act Assistant
               </h2>
-              <p className="text-gray-600 max-w-md mb-6">
+              <p style={styles.emptySubtitle}>
                 Ask me anything about the Employment Act 2007 (Chapter 226)
               </p>
-              <div className="flex flex-wrap gap-2 justify-center max-w-lg">
+              <div className="questions-gap" style={styles.questionsGrid}>
                 {suggestedQuestions.map((question, index) => (
                   <button
                     key={index}
+                    className="question-padding question-text"
+                    style={styles.questionButton}
                     onClick={() => {
                       setInput(question);
                       setTimeout(handleSend, 100);
                     }}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700 transition-colors"
                   >
                     {question}
                   </button>
                 ))}
               </div>
               {!isAuthenticated && (
-                <p className="text-sm text-gray-400 mt-6">
-                   Sign in to save your chat history
+                <p className="guest-note-margin" style={styles.guestNote}>
+                  ✨ Sign in to save your chat history
                 </p>
               )}
             </div>
           ) : (
-            <div className="max-w-3xl mx-auto space-y-4">
+            <div className="messages-gap" style={styles.messagesList}>
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  style={styles.messageWrapper(message.type)}
                 >
                   <div
-                    className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                      message.type === 'user'
-                        ? 'bg-[#081c2b]/70 text-white'
-                        : message.type === 'system'
-                        ? 'bg-gray-100 text-gray-600 text-sm italic'
-                        : 'bg-white border border-gray-200 text-gray-800'
-                    }`}
+                    className="message-bubble message-bubble-padding message-text-size"
+                    style={styles.messageBubble(message.type)}
                   >
                     {message.type === 'system' ? (
-                      <div className="text-center">{message.content}</div>
+                      <div style={{ textAlign: 'center' }}>{message.content}</div>
                     ) : (
-                      <div className="prose prose-sm max-w-none">
+                      <div style={styles.messageContent}>
                         {message.content.split('\n').map((line, i) => (
                           <React.Fragment key={i}>
                             {line}
@@ -222,8 +639,8 @@ const ChatAI = () => {
                           </React.Fragment>
                         ))}
                         {message.sources && (
-                          <div className="mt-2 pt-2 border-t border-gray-200">
-                            <p className="text-xs text-gray-500">Sources: {message.sources.join(', ')}</p>
+                          <div style={styles.sources}>
+                            <p style={styles.sourcesText}>Sources: {message.sources.join(', ')}</p>
                           </div>
                         )}
                       </div>
@@ -232,12 +649,12 @@ const ChatAI = () => {
                 </div>
               ))}
               {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-white border border-gray-200 rounded-lg px-4 py-3">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div style={styles.loadingDots}>
+                  <div style={styles.loadingBubble}>
+                    <div className="dot-size" style={styles.dotContainer}>
+                      <div style={styles.dot('0ms')}></div>
+                      <div style={styles.dot('150ms')}></div>
+                      <div style={styles.dot('300ms')}></div>
                     </div>
                   </div>
                 </div>
@@ -248,43 +665,41 @@ const ChatAI = () => {
         </div>
 
         {/* Input Area */}
-        <div className="bg-white border-t border-gray-200 p-4">
-          <div className="max-w-3xl mx-auto flex gap-3">
+        <div className="input-padding" style={styles.inputArea}>
+          <div className="input-gap" style={styles.inputContainer}>
             <button
               onClick={handleNewChat}
-              className="p-2 hover:bg-gray-100 rounded-lg text-gray-600 self-end"
+              className="new-chat-icon"
+              style={styles.newChatButton}
               title="New Chat"
             >
-              <Sparkles size={20} />
+              <Sparkles className="new-chat-icon" size={18} />
             </button>
-            <div className="flex-1 relative">
+            <div style={styles.textareaWrapper}>
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
                 placeholder="Ask about the Employment Act..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-navy-500 focus:border-transparent resize-none"
+                className="input-text-size input-min-height"
+                style={styles.textarea}
                 rows={1}
-                style={{ minHeight: '50px', maxHeight: '150px' }}
                 disabled={loading}
               />
             </div>
             <button
               onClick={handleSend}
               disabled={!input.trim() || loading}
-              className={`p-3 rounded-lg transition-colors ${
-                input.trim() && !loading
-                  ? 'bg-[#081c2b]/95 text-white hover:bg-navy-800'
-                  : 'bg-[#081c2b]/90 text-gray-400 cursor-not-allowed'
-              }`}
+              className="send-padding send-icon-size"
+              style={styles.sendButton(!input.trim() || loading)}
             >
-              <Send size={20} />
+              <Send className="send-icon-size" size={18} />
             </button>
           </div>
-          <div className="max-w-3xl mx-auto mt-2 flex justify-between text-xs text-gray-400">
+          <div className="footer-text" style={styles.footer}>
             <span>Powered by SheriaAI</span>
-            <span>{isAuthenticated ? ' Saved' : ' Sign in to save'}</span>
+            <span>{isAuthenticated ? '💾 Saved' : '🔒 Sign in to save'}</span>
           </div>
         </div>
       </div>

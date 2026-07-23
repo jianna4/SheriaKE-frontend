@@ -32,10 +32,7 @@ const LandingPage = () => {
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32 lg:py-40">
           <div className="text-center max-w-4xl mx-auto ">
-            <div className="inline-flex items-center gap-2 bg-[#e89432]/10 backdrop-blur-sm border border-[#e89432]/30 px-4 py-2 rounded-full mb-2">
-              <Sparkles className="w-4 h-4 text-[#f4ab5b]" />
-              <span className="text-[#f4ab5b] text-sm font-medium">Kenya Employment Act 2007</span>
-            </div>
+           
             
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               Your AI-Powered Guide to
