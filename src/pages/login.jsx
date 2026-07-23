@@ -66,7 +66,7 @@ const LoginPage = () => {
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email) && !email.includes('@')) {
       // Allow usernames or emails
-      if (!email.match(/^[a-zA-Z0-9_]+$/)) {
+      if (!email.match(/^[a-zA-Z0-9_.-]+$/)) {
         newErrors.email = 'Please enter a valid email or username';
         isValid = false;
       }
