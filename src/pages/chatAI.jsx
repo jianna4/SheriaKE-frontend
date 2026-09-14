@@ -7,18 +7,18 @@ import ChatSidebar from '../Components/chatsection/chatsidebar';
 
 const ChatAI = () => {
   const { isAuthenticated, user, logout } = useAuth();
-  const { 
-    messages, 
-    sendMessage, 
-    loading, 
+  const {
+    messages,
+    sendMessage,
+    loading,
     createNewSession,
     clearGuestChat,
     sidebarOpen,
     setSidebarOpen
   } = useChat();
-  
+
   const [input, setInput] = useState('');
-  const [role, setRole] = useState('employee');
+  const [role, setRole] = useState('individual');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -36,7 +36,7 @@ const ChatAI = () => {
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
-    
+
     const query = input.trim();
     setInput('');
     await sendMessage(query, role);
@@ -61,20 +61,20 @@ const ChatAI = () => {
     setRole(newRole);
   };
 
-  const suggestedQuestions = role === 'employee' 
+  const suggestedQuestions = role === 'individual'
     ? [
-        "How much annual leave am I entitled to?",
-        "What are the rules for maternity leave?",
+        "What is the minimum age for marriage in Kenya?",
+        "What are the grounds for divorce?",
+        "Does housework count as a contribution to matrimonial property?",
         "Can I be fired without notice?",
-        "What is unfair termination?",
-        "How do I report a complaint?"
+        "How much annual leave am I entitled to?"
       ]
     : [
-        "What records must I keep for employees?",
-        "How do I properly terminate an employee?",
-        "What are the requirements for a written contract?",
-        "What deductions can I make from wages?",
-        "What are the penalties for non-compliance?"
+        "Section 7 of the Matrimonial Property Act — what does it say?",
+        "What makes a marriage void under the Marriage Act 2014?",
+        "Explain the contribution principle in matrimonial property.",
+        "What notice is required before terminating employment?",
+        "Grounds for divorce under customary law."
       ];
 
   // Styles
@@ -404,7 +404,7 @@ const ChatAI = () => {
         0%, 80%, 100% { transform: scale(0); }
         40% { transform: scale(1); }
       }
-      
+
       @media (min-width: 480px) {
         .brand-subtitle { display: block !important; }
         .username-desktop { display: inline !important; }
@@ -451,7 +451,7 @@ const ChatAI = () => {
         .username-max { max-width: 100px !important; }
         .username-text { font-size: 14px !important; }
       }
-      
+
       @media (max-width: 479px) {
         .brand-subtitle { display: none !important; }
         .username-desktop { display: none !important; }
@@ -511,7 +511,7 @@ const ChatAI = () => {
         {/* Header */}
         <header className="header-padding" style={styles.header}>
           <div style={styles.headerLeft}>
-            <button 
+            <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="menu-button-padding"
               style={styles.menuButton}
@@ -525,7 +525,7 @@ const ChatAI = () => {
               <div>
                 <h1 className="header-title" style={styles.brandTitle}>SheriaAI Chat</h1>
                 <p className="brand-subtitle header-subtitle" style={styles.brandSubtitle}>
-                  {role === 'employee' ? 'Employee Mode' : 'Employer Mode'}
+                  {role === 'individual' ? 'Public Mode' : 'Legal Mode'}
                 </p>
               </div>
             </div>
@@ -535,22 +535,22 @@ const ChatAI = () => {
             {/* Role Toggle */}
             <div style={styles.roleToggle}>
               <button
-                onClick={() => handleRoleChange('employee')}
+                onClick={() => handleRoleChange('individual')}
                 className="role-padding role-text"
-                style={styles.roleButton(role === 'employee')}
+                style={styles.roleButton(role === 'individual')}
               >
                 <User className="role-icon-size" size={12} />
-                <span className="role-label-full">Employee</span>
-                <span className="role-label-short">Emp</span>
+                <span className="role-label-full">Public</span>
+                <span className="role-label-short">Pub</span>
               </button>
               <button
-                onClick={() => handleRoleChange('employer')}
+                onClick={() => handleRoleChange('legal')}
                 className="role-padding role-text"
-                style={styles.roleButton(role === 'employer')}
+                style={styles.roleButton(role === 'legal')}
               >
                 <Briefcase className="role-icon-size" size={12} />
-                <span className="role-label-full">Employer</span>
-                <span className="role-label-short">Emp</span>
+                <span className="role-label-full">Legal</span>
+                <span className="role-label-short">Legal</span>
               </button>
             </div>
 
@@ -591,10 +591,10 @@ const ChatAI = () => {
                 <Sparkles className="empty-icon-svg" size={28} style={{ color: '#c9a84c' }} />
               </div>
               <h2 className="empty-title-size" style={styles.emptyTitle}>
-                Kenya Employment Act Assistant
+                Kenya Law Assistant
               </h2>
               <p style={styles.emptySubtitle}>
-                Ask me anything about the Employment Act 2007 (Chapter 226)
+                Ask me anything about the Employment Act 2007, Marriage Act 2014, or Matrimonial Property Act 2013
               </p>
               <div className="questions-gap" style={styles.questionsGrid}>
                 {suggestedQuestions.map((question, index) => (
@@ -638,9 +638,15 @@ const ChatAI = () => {
                             {i < message.content.split('\n').length - 1 && <br />}
                           </React.Fragment>
                         ))}
-                        {message.sources && (
+                        {message.sources && message.sources.length > 0 && (
                           <div style={styles.sources}>
-                            <p style={styles.sourcesText}>Sources: {message.sources.join(', ')}</p>
+                            <p style={styles.sourcesText}>
+                              Sources: {message.sources
+                                .map(s => typeof s === 'string'
+                                  ? s
+                                  : `${s.act} s.${s.section}`)
+                                .join(', ')}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -681,7 +687,7 @@ const ChatAI = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder="Ask about the Employment Act..."
+                placeholder="Ask about Kenyan law..."
                 className="input-text-size input-min-height"
                 style={styles.textarea}
                 rows={1}

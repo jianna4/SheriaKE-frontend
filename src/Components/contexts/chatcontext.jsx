@@ -132,7 +132,7 @@ export const ChatProvider = ({ children }) => {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        content: `❌ **Error**: ${error.response?.data?.detail || error.message || 'Failed to get response'}`,
+        content: ` Error: ${error.response?.data?.detail || error.message || 'Failed to get response'}`,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);

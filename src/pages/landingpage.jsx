@@ -37,13 +37,13 @@ const LandingPage = () => {
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
               Your AI-Powered Guide to
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f4ab5b] to-[#e89432] block mt-2">
-                Employment Law in Kenya
+                Kenyan Law
               </span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Instant answers about workplace rights, termination, wages, and compliance. 
-              Trusted by 50,000+ Kenyan employees and employers.
+              Instant answers on employment rights, marriage, divorce, and matrimonial property. 
+              Trusted by 50,000+ Kenyans.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
@@ -97,7 +97,7 @@ const LandingPage = () => {
               Everything You Need in One Platform
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Powerful tools for employees, employers, and legal professionals
+              Powerful tools for everyday Kenyans, legal professionals, and clients
             </p>
           </div>
 
@@ -112,7 +112,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-2xl font-bold text-[#081c2b] mb-3">AI Legal Assistant</h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Get instant answers about the Employment Act 2007. Our AI provides accurate, cited responses 24/7.
+                Get instant answers on the Employment Act 2007, Marriage Act 2014, and Matrimonial Property Act 2013. Accurate, cited responses 24/7.
               </p>
               <div className="flex items-center gap-2 text-sm text-[#d47a1a]">
                 <Star className="w-4 h-4 fill-[#e89432] text-[#e89432]" />
@@ -130,7 +130,7 @@ const LandingPage = () => {
               </div>
               <h3 className="text-2xl font-bold text-[#081c2b] mb-3">Verified Lawyers</h3>
               <p className="text-gray-600 leading-relaxed mb-4">
-                Browse and connect with LSK-verified employment lawyers. Read reviews and compare rates.
+                Browse and connect with LSK-verified lawyers across employment and family law. Read reviews and compare rates.
               </p>
               <div className="flex items-center gap-2 text-sm text-[#d47a1a]">
                 <Shield className="w-4 h-4" />
@@ -184,7 +184,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-[#081c2b] mb-2">Ask Your Question</h3>
-                <p className="text-gray-600">Type your legal question about employment rights, termination, or wages</p>
+                <p className="text-gray-600">Type your legal question about employment, marriage, or matrimonial property</p>
               </div>
 
               <div className="text-center">
@@ -197,7 +197,7 @@ const LandingPage = () => {
                   </div>
                 </div>
                 <h3 className="text-xl font-bold text-[#081c2b] mb-2">AI Analyzes & Matches</h3>
-                <p className="text-gray-600">Our AI searches the law and connects you with relevant lawyers if needed</p>
+                <p className="text-gray-600">Our AI searches the relevant Acts and connects you with relevant lawyers if needed</p>
               </div>
 
               <div className="text-center">
@@ -258,7 +258,7 @@ const LandingPage = () => {
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all">
               <Quote className="w-10 h-10 text-[#e89432] mb-4" />
               <p className="text-gray-700 leading-relaxed mb-4">
-                "SheriAKE helped me understand my rights after wrongful termination. The AI gave me instant answers, and I found a great lawyer through the platform."
+                "SheriaKE helped me understand my rights after wrongful termination. The AI gave me instant answers, and I found a great lawyer through the platform."
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-[#1e4a6e] rounded-full flex items-center justify-center">
@@ -280,7 +280,7 @@ const LandingPage = () => {
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all">
               <Quote className="w-10 h-10 text-[#e89432] mb-4" />
               <p className="text-gray-700 leading-relaxed mb-4">
-                "As an employer, I use SheriAKE to ensure compliance. The chatbot answers my HR questions instantly, saving me thousands in legal fees."
+                "I had questions about division of matrimonial property during my divorce. SheriaKE explained my rights clearly and helped me find the right advocate."
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-[#1e4a6e] rounded-full flex items-center justify-center">
@@ -331,7 +331,7 @@ const LandingPage = () => {
             Ready to Get Legal Clarity?
           </h2>
           <p className="text-xl text-gray-300 mb-8 leading-relaxed">
-            Join thousands of Kenyans who trust SheriAKE for their employment law questions
+            Join thousands of Kenyans who trust SheriaKE for their legal questions
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/signup" className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-[#e89432] to-[#d47a1a] text-[#081c2b] rounded-xl font-semibold text-lg hover:from-[#f4ab5b] hover:to-[#e89432] transition-all transform hover:scale-105 shadow-xl">

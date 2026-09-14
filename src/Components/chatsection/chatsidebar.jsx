@@ -309,7 +309,7 @@ const ChatSidebar = () => {
             </div>
           </div>
           <div className="mt-1 text-[10px] text-black-500 text-center font-light tracking-wider">
-            {isAuthenticated ? '💾 All chats are saved securely' : '🔒 Sign in to save your chats'}
+            {isAuthenticated ? ' All chats are saved securely' : ' Sign in to save your chats'}
           </div>
         </div>
       </div>
